@@ -1,0 +1,19 @@
+# Example Film Prompts for DirectorGPT
+
+## Drama
+"A retired musician hears a song that reminds them of a lost love, leading them on a journey through their memories."
+
+## Horror
+"A night security guard at a museum notices the exhibits are slightly different each morning, and tonight he catches them moving."
+
+## Sci-Fi
+"In a world where dreams can be recorded, a technician discovers someone else's dream that predicts the future."
+
+## Comedy
+"A professional mime accidentally gets hired as a corporate consultant and must navigate meetings without speaking."
+
+## Romance
+"Two rival food truck owners on the same street slowly realize their recipes taste better when combined."
+
+## Thriller
+"A translator at the UN realizes a diplomatic message contains a hidden assassination plot."

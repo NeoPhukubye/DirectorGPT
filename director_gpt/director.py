@@ -1,16 +1,26 @@
 """Director orchestrator for coordinating multi-agent film production."""
 
-from typing import Optional
 import json
 from pathlib import Path
 
-from director_gpt.agents import BaseAgent, MessageType
-from director_gpt.agents.screenwriter import ScreenwriterAgent
 from director_gpt.agents.casting import CastingAgent
-from director_gpt.agents.sound import SoundDesignerAgent
 from director_gpt.agents.editor import EditorAgent
-from director_gpt.models import FilmScript, Scene, Shot, Character, EmotionalTone, ShotType, SoundtrackSegment, SoundCue, EditDecision, TransitionType
-from director_gpt.models.project import ProjectState, ProductionPhase
+from director_gpt.agents.screenwriter import ScreenwriterAgent
+from director_gpt.agents.sound import SoundDesignerAgent
+from director_gpt.models import (
+    Character,
+    EditDecision,
+    EmotionalTone,
+    FilmScript,
+    Scene,
+    Shot,
+    ShotType,
+    SoundCue,
+    SoundtrackSegment,
+    TransitionType,
+)
+from director_gpt.models.project import ProductionPhase, ProjectState
+from director_gpt.utils import safe_import
 
 
 class DirectorAgent:
@@ -18,7 +28,7 @@ class DirectorAgent:
 
     def __init__(self, state: ProjectState, llm_client=None):
         self.state = state
-        self.script: Optional[FilmScript] = None
+        self.script: FilmScript | None = None
         self.llm_client = llm_client
 
         self.screenwriter = ScreenwriterAgent("Screenwriter", state, llm_client=llm_client)
@@ -63,7 +73,7 @@ class DirectorAgent:
         return self.script
 
     def _phase_development(self, prompt: str, target_duration: float):
-        """Development phase: Create the script and storyboard."""
+        """Development phase: Create the script and storyboard with critique-refine loop."""
         self.state.add_message("Director", "=== DEVELOPMENT PHASE ===")
 
         screenplay_data = self.screenwriter.process({
@@ -71,6 +81,9 @@ class DirectorAgent:
             "target_duration": target_duration,
             "genre": self.script.genre,
         })
+
+        if self.llm_client:
+            screenplay_data = self._refine_script_with_feedback(screenplay_data)
 
         self.script.characters = [
             Character(**c) for c in screenplay_data.get("characters", [])
@@ -107,6 +120,61 @@ class DirectorAgent:
         self.state.add_message("Director",
             f"Script complete: {len(self.script.scenes)} scenes, "
             f"{sum(len(s.shots) for s in self.script.scenes)} shots")
+
+    def _refine_script_with_feedback(self, screenplay_data: dict) -> dict:
+        """Run critique-and-refine loop between agents."""
+        max_iterations = 2
+
+        for iteration in range(max_iterations):
+            self.state.add_message("Director", f"--- Critique Round {iteration + 1} ---")
+
+            casting_feedback = self.casting.process({
+                "script": screenplay_data,
+                "mode": "critique",
+            })
+            critique_notes = casting_feedback.get("critique_notes", [])
+            if critique_notes:
+                self.state.add_message("Casting", f"Found {len(critique_notes)} continuity concerns")
+                screenplay_data = self._apply_casting_feedback(screenplay_data, critique_notes)
+            else:
+                self.state.add_message("Casting", "No continuity issues found")
+
+            sound_feedback = self.sound.process({
+                "script": screenplay_data,
+                "mode": "critique",
+            })
+            sound_issues = sound_feedback.get("critique_notes", [])
+            if sound_issues:
+                self.state.add_message("Sound", f"Found {len(sound_issues)} emotional alignment issues")
+                screenplay_data = self._apply_sound_feedback(screenplay_data, sound_issues)
+            else:
+                self.state.add_message("Sound", "Emotional pacing looks good")
+
+        return screenplay_data
+
+    def _apply_casting_feedback(self, screenplay_data: dict, notes: list[dict]) -> dict:
+        """Apply casting agent feedback to screenplay."""
+        scenes = screenplay_data.get("scenes", [])
+        for note in notes:
+            if note.get("type") == "character_continuity":
+                subject = note.get("subject")
+                scene_nums = note.get("scenes", [])
+                for scene in scenes:
+                    if scene.get("scene_number") in scene_nums and subject in scene.get("characters", []):
+                        scene["description"] += f" (maintain {subject} visual consistency)"
+        return screenplay_data
+
+    def _apply_sound_feedback(self, screenplay_data: dict, notes: list[dict]) -> dict:
+        """Apply sound designer feedback to screenplay."""
+        scenes = screenplay_data.get("scenes", [])
+        for note in notes:
+            if note.get("type") == "emotional_alignment":
+                scene_num = note.get("scene_number")
+                suggestion = note.get("suggestion")
+                for scene in scenes:
+                    if scene.get("scene_number") == scene_num:
+                        scene["description"] += f" [Audio note: {suggestion}]"
+        return screenplay_data
 
     def _phase_pre_production(self):
         """Pre-production: Casting, consistency, and sound design."""
@@ -215,16 +283,25 @@ class DirectorAgent:
         self.state.add_artifact("final_cut", output_path)
         self.state.add_message("Director", f"Film assembled: {output_path}")
 
-    def _merge_visual_prompts(self, shot_prompt: Optional[str], character_prompt: str) -> str:
+    def _merge_visual_prompts(self, shot_prompt: str | None, character_prompt: str) -> str:
         """Merge shot description with character consistency prompt."""
         if shot_prompt:
             return f"{shot_prompt}, featuring {character_prompt}"
         return character_prompt
 
-    def _generate_shot_image(self, scene: Scene, shot: Shot) -> Optional[Path]:
+    def _generate_shot_image(self, scene: Scene, shot: Shot) -> Path | None:
         """Generate image for a shot using configured image generation."""
         self.state.add_message("Director",
             f"Generating image: Scene {scene.scene_number}, Shot {shot.shot_number}")
+
+        if not self.state.config.enable_image_generation:
+            return None
+
+        openai_mod, err = safe_import("openai")
+        if not openai_mod:
+            self.state.add_error(err or "openai package not installed")
+            self.log(f"Skipped image generation: {err}")
+            return None
 
         image_dir = self.state.config.output_dir / "images"
         image_dir.mkdir(exist_ok=True)
@@ -236,10 +313,19 @@ class DirectorAgent:
 
         return image_path
 
-    def _generate_shot_video(self, shot: Shot) -> Optional[Path]:
+    def _generate_shot_video(self, shot: Shot) -> Path | None:
         """Generate video clip for a shot."""
         self.state.add_message("Director",
             f"Generating video: Shot {shot.shot_number}")
+
+        if not self.state.config.enable_video_generation:
+            return None
+
+        runwayml_mod, err = safe_import("runwayml")
+        if not runwayml_mod:
+            self.state.add_error(err or "runwayml package not installed")
+            self.log(f"Skipped video generation: {err}")
+            return None
 
         video_dir = self.state.config.output_dir / "videos"
         video_dir.mkdir(exist_ok=True)

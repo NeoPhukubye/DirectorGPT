@@ -1,9 +1,8 @@
 """Sound Designer agent for soundtrack and foley generation."""
 
-from typing import Optional
 
-from director_gpt.agents import BaseAgent, MessageType
-from director_gpt.models import EmotionalTone, SoundtrackSegment, SoundCue
+from director_gpt.agents import BaseAgent
+from director_gpt.models import EmotionalTone, SoundCue, SoundtrackSegment
 from director_gpt.models.project import ProjectState
 
 
@@ -18,10 +17,14 @@ class SoundDesignerAgent(BaseAgent):
 
     def process(self, input_data: dict) -> dict:
         """Generate soundtrack and sound cues from script."""
+        mode = input_data.get("mode", "generate")
         script = input_data.get("script", {})
         scenes = script.get("scenes", [])
 
         self.log(f"Analyzing {len(scenes)} scenes for audio design")
+
+        if mode == "critique":
+            return self._critique_script(scenes)
 
         soundtrack = self._generate_soundtrack(scenes)
         self.log(f"Created {len(soundtrack)} soundtrack segments")
@@ -32,6 +35,39 @@ class SoundDesignerAgent(BaseAgent):
         return {
             "soundtrack": soundtrack,
             "sound_cues": sound_cues,
+        }
+
+    def _critique_script(self, scenes: list[dict]) -> dict:
+        """Critique the script for emotional pacing issues."""
+        critique_notes = []
+
+        for scene in scenes:
+            emotional_tone = scene.get("emotional_tone", "neutral")
+            scene_duration = sum(shot.get("duration_seconds", 3.0) for shot in scene.get("shots", []))
+
+            if scene_duration > 30 and emotional_tone in ["tense", "horror"]:
+                critique_notes.append({
+                    "type": "emotional_alignment",
+                    "scene_number": scene.get("scene_number"),
+                    "suggestion": f"Consider breaking up long {emotional_tone} scene to maintain tension",
+                })
+
+            if scene_duration < 5 and emotional_tone in ["romantic", "serene"]:
+                critique_notes.append({
+                    "type": "emotional_alignment",
+                    "scene_number": scene.get("scene_number"),
+                    "suggestion": f"Extend {emotional_tone} moment for emotional impact",
+                })
+
+        if not critique_notes:
+            critique_notes.append({
+                "type": "emotional_alignment",
+                "scene_number": None,
+                "suggestion": "Emotional pacing looks balanced",
+            })
+
+        return {
+            "critique_notes": critique_notes,
         }
 
     def _generate_soundtrack(self, scenes: list[dict]) -> list[dict]:
@@ -157,7 +193,6 @@ class SoundDesignerAgent(BaseAgent):
         """Analyze a scene for required sound effects."""
         cues = []
         location = scene.get("location", "").lower()
-        emotional_tone = scene.get("emotional_tone", "neutral")
 
         ambient_cue = self._get_ambient_sound(location, time_offset, scene)
         if ambient_cue:
@@ -170,7 +205,7 @@ class SoundDesignerAgent(BaseAgent):
 
         return cues
 
-    def _get_ambient_sound(self, location: str, time_offset: float, scene: dict) -> Optional[SoundCue]:
+    def _get_ambient_sound(self, location: str, time_offset: float, scene: dict) -> SoundCue | None:
         """Get ambient sound for a location."""
         ambient_map = {
             "city": ("city ambience", "traffic, distant voices, urban hum"),

@@ -9,6 +9,87 @@ const statusSection = document.getElementById('status');
 const statusText = document.getElementById('statusText');
 const resultsSection = document.getElementById('results');
 
+function initEnchantedReveal() {
+    const canvas = document.getElementById('sparkleCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles = [];
+    const colors = ['#f472b6', '#fbcfe8', '#e9d5ff', '#c084fc', '#ffffff', '#fb7185'];
+
+    for (let i = 0; i < 90; i++) {
+        particles.push({
+            x: window.innerWidth / 2,
+            y: window.innerHeight / 2,
+            vx: (Math.random() - 0.5) * 14,
+            vy: (Math.random() - 0.5) * 14,
+            radius: Math.random() * 4 + 1.5,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            alpha: 1,
+            decay: Math.random() * 0.015 + 0.005
+        });
+    }
+
+    function animateSparkles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p) => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.alpha -= p.decay;
+            if (p.alpha > 0) {
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        });
+        if (particles.some(p => p.alpha > 0)) {
+            requestAnimationFrame(animateSparkles);
+        }
+    }
+
+    setTimeout(() => {
+        animateSparkles();
+        const curtain = document.getElementById('enchantedCurtain');
+        const container = document.querySelector('.container.transform-reveal');
+
+        if (curtain) curtain.classList.add('dissolve');
+        if (container) container.classList.add('revealed');
+
+        setTimeout(() => {
+            if (curtain) curtain.style.display = 'none';
+        }, 1200);
+    }, 1800);
+}
+
+function createFloatingPetals() {
+    const layer = document.getElementById('petalsLayer');
+    const icons = ['🌸', '🌺', '✨', '💐', '🌷', '💫'];
+
+    setInterval(() => {
+        const petal = document.createElement('div');
+        petal.classList.add('petal');
+        petal.textContent = icons[Math.floor(Math.random() * icons.length)];
+        petal.style.left = `${Math.random() * 100}vw`;
+        petal.style.animationDuration = `${Math.random() * 6 + 5}s`;
+        petal.style.fontSize = `${Math.random() * 12 + 14}px`;
+        layer.appendChild(petal);
+
+        setTimeout(() => {
+            petal.remove();
+        }, 11000);
+    }, 450);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initEnchantedReveal();
+    createFloatingPetals();
+});
+
 function showStatus(message) {
     statusText.textContent = message;
     statusSection.classList.remove('hidden');
@@ -112,7 +193,7 @@ generateBtn.addEventListener('click', async () => {
     }
 
     generateBtn.disabled = true;
-    showStatus('Initializing DirectorGPT agents...');
+    showStatus('Initializing DirectorGPT studio agents...');
 
     try {
         const result = await callApi('/api/produce', data);
@@ -138,7 +219,7 @@ scriptBtn.addEventListener('click', async () => {
     }
 
     scriptBtn.disabled = true;
-    showStatus('Screenwriter is generating screenplay...');
+    showStatus('Screenwriter is crafting screenplay...');
 
     try {
         const result = await callApi('/api/script', data);

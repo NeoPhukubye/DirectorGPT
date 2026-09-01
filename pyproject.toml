@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "directorgpt"
+version = "0.1.0"
+description = "DirectorGPT - AI-powered multi-agent film production studio"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "DirectorGPT Contributors"},
+]
+keywords = ["ai", "film", "multi-agent", "production", "creative"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "pydantic>=2.0",
+    "rich>=13.0",
+    "click>=8.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "black",
+    "ruff",
+    "mypy",
+]
+image = [
+    "openai>=1.0",
+]
+audio = [
+    "openai>=1.0",
+]
+video = [
+    "runwayml",
+]
+
+[project.scripts]
+directorgpt = "director_gpt.main:main"
+
+[project.urls]
+Homepage = "https://github.com/directorgpt/directorgpt"
+Documentation = "https://directorgpt.readthedocs.io"
+
+[tool.setuptools.packages.find]
+include = ["director_gpt*"]
+exclude = ["tests*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true

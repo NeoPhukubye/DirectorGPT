@@ -1,11 +1,10 @@
 """Screenwriter agent for script generation and storyboarding."""
 
 import json
-import math
-from typing import Optional
 
-from director_gpt.agents import BaseAgent, MessageType
-from director_gpt.models import ShotType, EmotionalTone
+from director_gpt.agents import BaseAgent
+from director_gpt.models import ShotType
+from director_gpt.utils import clean_json_text
 
 
 class ScreenwriterAgent(BaseAgent):
@@ -56,7 +55,7 @@ class ScreenwriterAgent(BaseAgent):
 
         try:
             response = self.llm_client.generate(user_prompt, system_prompt=system_prompt)
-            data = json.loads(response)
+            data = json.loads(clean_json_text(response))
             if "characters" in data and "scenes" in data:
                 return data
         except Exception as e:
@@ -311,7 +310,7 @@ class ScreenwriterAgent(BaseAgent):
         }
         return descriptions.get(shot_type, "Standard shot")
 
-    def _get_camera_movement(self, shot_type: ShotType, shot_index: int) -> Optional[str]:
+    def _get_camera_movement(self, shot_type: ShotType, shot_index: int) -> str | None:
         """Determine camera movement for shot."""
         movements = {
             ShotType.WIDE: "slow pan left to right",

@@ -1,0 +1,578 @@
+{
+  "title": "Whispers",
+  "logline": "A family moves into a house where the walls whisper at night",
+  "genre": "horror",
+  "total_duration_estimate": 90.0,
+  "characters": [
+    {
+      "name": "Alex",
+      "description": "A determined protagonist facing an impossible choice",
+      "visual_prompt": "cinematic portrait, dramatic lighting, 35mm film grain",
+      "voice_description": "measured, thoughtful voice with underlying tension",
+      "consistency_embedding": null
+    },
+    {
+      "name": "Morgan",
+      "description": "A pragmatic ally with hidden depths",
+      "visual_prompt": "practical clothing, confident posture, sharp eyes",
+      "voice_description": "direct, clipped speech",
+      "consistency_embedding": null
+    }
+  ],
+  "scenes": [
+    {
+      "scene_number": 1,
+      "title": "Scene 1: Unease",
+      "location": "suburban house, interior",
+      "time_of_day": "night",
+      "description": "Something feels wrong",
+      "emotional_tone": "mysterious",
+      "shots": [
+        {
+          "shot_number": 1,
+          "shot_type": "wide",
+          "description": "Establishing shot of suburban house, interior",
+          "duration_seconds": 5.6,
+          "dialogue": null,
+          "action": null,
+          "camera_movement": "slow pan left to right",
+          "visual_prompt": "wide establishing shot, dark rooms, flickering lights, long shadows, blue moonlight, cinematic lighting, film grain, 35mm, professional color grading, featuring character:Alex, adult, mid 30s, average build, cinematic portrait, dramatic lighting, 35mm film grain, consistent character design, same person across all shots, character reference sheet style, front-facing, neutral expression",
+          "characters": [
+            "Alex"
+          ],
+          "emotional_tone": "mysterious",
+          "generated_image_path": null,
+          "generated_video_path": null
+        },
+        {
+          "shot_number": 2,
+          "shot_type": "wide",
+          "description": "Establishing shot of suburban house, interior",
+          "duration_seconds": 5.6,
+          "dialogue": null,
+          "action": null,
+          "camera_movement": "static",
+          "visual_prompt": "wide establishing shot, dark rooms, flickering lights, long shadows, blue moonlight, cinematic lighting, film grain, 35mm, professional color grading, featuring character:Alex, adult, mid 30s, average build, cinematic portrait, dramatic lighting, 35mm film grain, consistent character design, same person across all shots, character reference sheet style, front-facing, neutral expression",
+          "characters": [
+            "Alex"
+          ],
+          "emotional_tone": "mysterious",
+          "generated_image_path": null,
+          "generated_video_path": null
+        },
+        {
+          "shot_number": 3,
+          "shot_type": "medium",
+          "description": "Medium shot capturing character interaction",
+          "duration_seconds": 5.6,
+          "dialogue": null,
+          "action": null,
+          "camera_movement": "subtle push in",
+          "visual_prompt": "medium shot, rule of thirds, dark rooms, flickering lights, long shadows, blue moonlight, cinematic portrait, dramatic lighting, 35mm film grain, cinematic lighting, film grain, 35mm, professional color grading",
+          "characters": [],
+          "emotional_tone": "mysterious",
+          "generated_image_path": null,
+          "generated_video_path": null
+        },
+        {
+          "shot_number": 4,
+          "shot_type": "insert",
+          "description": "Detail insert of important object",
+          "duration_seconds": 5.6,
+          "dialogue": null,
+          "action": null,
+          "camera_movement": "static",
+          "visual_prompt": "insert shot, sharp focus, dark rooms, flickering lights, long shadows, blue moonlight, cinematic lighting, film grain, 35mm, professional color grading",
+          "characters": [],
+          "emotional_tone": "mysterious",
+          "generated_image_path": null,
+          "generated_video_path": null
+        }
+      ],
+      "characters": [
+        "Alex",
+        "Morgan"
+      ],
+      "environment_prompt": "dark rooms, flickering lights, long shadows, blue moonlight"
+    },
+    {
+      "scene_number": 2,
+      "title": "Scene 2: Discovery",
+      "location": "basement, interior",
+      "time_of_day": "night",
+      "description": "The source of dread revealed",
+      "emotional_tone": "horror",
+      "shots": [
+        {
+          "shot_number": 1,
+          "shot_type": "wide",
+          "description": "Establishing shot of basement, interior",
+          "duration_seconds": 5.6,
+          "dialogue": null,
+          "action": null,
+          "camera_movement": "slow pan left to right",
+          "visual_prompt": "wide establishing shot, single bulb, stone walls, water dripping, darkness pressing in, cinematic lighting, film grain, 35mm, professional color grading, featuring character:Alex, adult, mid 30s, average build, cinematic portrait, dramatic lighting, 35mm film grain, consistent character design, same person across all shots, character reference sheet style, front-facing, neutral expression",
+          "characters": [
+            "Alex"
+          ],
+          "emotional_tone": "horror",
+          "generated_image_path": null,
+          "generated_video_path": null
+        },
+        {
+          "shot_number": 2,
+          "shot_type": "medium",
+          "description": "Medium shot capturing character interaction",
+          "duration_seconds": 5.6,
+          "dialogue": null,
+          "action": null,
+          "camera_movement": "static",
+          "visual_prompt": "medium shot, rule of thirds, single bulb, stone walls, water dripping, darkness pressing in, cinematic portrait, dramatic lighting, 35mm film grain, cinematic lighting, film grain, 35mm, professional color grading, featuring character:Alex, adult, mid 30s, average build, cinematic portrait, dramatic lighting, 35mm film grain, consistent character design, same person across all shots, character reference sheet style, front-facing, neutral expression",
+          "characters": [
+            "Alex"
+          ],
+          "emotional_tone": "horror",
+          "generated_image_path": null,
+          "generated_video_path": null
+        },
+        {
+          "shot_number": 3,
+          "shot_type": "extreme_close_up",
+          "description": "Extreme detail shot for emphasis",
+          "duration_seconds": 5.6,
+          "dialogue": null,
+          "action": null,
+          "camera_movement": "rack focus",
+          "visual_prompt": "extreme detail, macro lens, single bulb, stone walls, water dripping, darkness pressing in, cinematic lighting, film grain, 35mm, professional color grading",
+          "characters": [],
+          "emotional_tone": "horror",
+          "generated_image_path": null,
+          "generated_video_path": null
+        },
+        {
+          "shot_number": 4,
+          "shot_type": "pov",
+          "description": "Point-of-view shot from character perspective",
+          "duration_seconds": 5.6,
+          "dialogue": null,
+          "action": null,
+          "camera_movement": "static",
+          "visual_prompt": "first-person perspective, immersive, single bulb, stone walls, water dripping, darkness pressing in, cinematic lighting, film grain, 35mm, professional color grading",
+          "characters": [],
+          "emotional_tone": "horror",
+          "generated_image_path": null,
+          "generated_video_path": null
+        }
+      ],
+      "characters": [
+        "Alex",
+        "Morgan"
+      ],
+      "environment_prompt": "single bulb, stone walls, water dripping, darkness pressing in"
+    },
+    {
+      "scene_number": 3,
+      "title": "Scene 3: Escape",
+      "location": "forest, exterior",
+      "time_of_day": "night",
+      "description": "Running from the terror",
+      "emotional_tone": "tense",
+      "shots": [
+        {
+          "shot_number": 1,
+          "shot_type": "wide",
+          "description": "Establishing shot of forest, exterior",
+          "duration_seconds": 5.6,
+          "dialogue": null,
+          "action": null,
+          "camera_movement": "slow pan left to right",
+          "visual_prompt": "wide establishing shot, dense fog, bare trees, moonlight breaking through, cinematic lighting, film grain, 35mm, professional color grading, featuring character:Alex, adult, mid 30s, average build, cinematic portrait, dramatic lighting, 35mm film grain, consistent character design, same person across all shots, character reference sheet style, front-facing, neutral expression",
+          "characters": [
+            "Alex"
+          ],
+          "emotional_tone": "tense",
+          "generated_image_path": null,
+          "generated_video_path": null
+        },
+        {
+          "shot_number": 2,
+          "shot_type": "medium",
+          "description": "Medium shot capturing character interaction",
+          "duration_seconds": 5.6,
+          "dialogue": null,
+          "action": null,
+          "camera_movement": "static",
+          "visual_prompt": "medium shot, rule of thirds, dense fog, bare trees, moonlight breaking through, cinematic portrait, dramatic lighting, 35mm film grain, cinematic lighting, film grain, 35mm, professional color grading, featuring character:Alex, adult, mid 30s, average build, cinematic portrait, dramatic lighting, 35mm film grain, consistent character design, same person across all shots, character reference sheet style, front-facing, neutral expression",
+          "characters": [
+            "Alex"
+          ],
+          "emotional_tone": "tense",
+          "generated_image_path": null,
+          "generated_video_path": null
+        },
+        {
+          "shot_number": 3,
+          "shot_type": "close_up",
+          "description": "Intimate close-up revealing emotion",
+          "duration_seconds": 5.6,
+          "dialogue": null,
+          "action": null,
+          "camera_movement": "static, locked off",
+          "visual_prompt": "close-up portrait, shallow depth of field, dense fog, bare trees, moonlight breaking through, cinematic portrait, dramatic lighting, 35mm film grain, cinematic lighting, film grain, 35mm, professional color grading",
+          "characters": [],
+          "emotional_tone": "tense",
+          "generated_image_path": null,
+          "generated_video_path": null
+        },
+        {
+          "shot_number": 4,
+          "shot_type": "close_up",
+          "description": "Intimate close-up revealing emotion",
+          "duration_seconds": 5.6,
+          "dialogue": null,
+          "action": null,
+          "camera_movement": "static",
+          "visual_prompt": "close-up portrait, shallow depth of field, dense fog, bare trees, moonlight breaking through, cinematic portrait, dramatic lighting, 35mm film grain, cinematic lighting, film grain, 35mm, professional color grading",
+          "characters": [],
+          "emotional_tone": "tense",
+          "generated_image_path": null,
+          "generated_video_path": null
+        }
+      ],
+      "characters": [
+        "Alex",
+        "Morgan"
+      ],
+      "environment_prompt": "dense fog, bare trees, moonlight breaking through"
+    },
+    {
+      "scene_number": 4,
+      "title": "Scene 4: Confrontation",
+      "location": "abandoned building, interior",
+      "time_of_day": "night",
+      "description": "Face to face with the horror",
+      "emotional_tone": "horror",
+      "shots": [
+        {
+          "shot_number": 1,
+          "shot_type": "wide",
+          "description": "Establishing shot of abandoned building, interior",
+          "duration_seconds": 5.6,
+          "dialogue": null,
+          "action": null,
+          "camera_movement": "slow pan left to right",
+          "visual_prompt": "wide establishing shot, decay, peeling wallpaper, complete darkness with flashlight, cinematic lighting, film grain, 35mm, professional color grading, featuring character:Alex, adult, mid 30s, average build, cinematic portrait, dramatic lighting, 35mm film grain, consistent character design, same person across all shots, character reference sheet style, front-facing, neutral expression",
+          "characters": [
+            "Alex"
+          ],
+          "emotional_tone": "horror",
+          "generated_image_path": null,
+          "generated_video_path": null
+        },
+        {
+          "shot_number": 2,
+          "shot_type": "medium",
+          "description": "Medium shot capturing character interaction",
+          "duration_seconds": 5.6,
+          "dialogue": null,
+          "action": null,
+          "camera_movement": "static",
+          "visual_prompt": "medium shot, rule of thirds, decay, peeling wallpaper, complete darkness with flashlight, cinematic portrait, dramatic lighting, 35mm film grain, cinematic lighting, film grain, 35mm, professional color grading, featuring character:Alex, adult, mid 30s, average build, cinematic portrait, dramatic lighting, 35mm film grain, consistent character design, same person across all shots, character reference sheet style, front-facing, neutral expression",
+          "characters": [
+            "Alex"
+          ],
+          "emotional_tone": "horror",
+          "generated_image_path": null,
+          "generated_video_path": null
+        },
+        {
+          "shot_number": 3,
+          "shot_type": "extreme_close_up",
+          "description": "Extreme detail shot for emphasis",
+          "duration_seconds": 5.6,
+          "dialogue": null,
+          "action": null,
+          "camera_movement": "rack focus",
+          "visual_prompt": "extreme detail, macro lens, decay, peeling wallpaper, complete darkness with flashlight, cinematic lighting, film grain, 35mm, professional color grading",
+          "characters": [],
+          "emotional_tone": "horror",
+          "generated_image_path": null,
+          "generated_video_path": null
+        },
+        {
+          "shot_number": 4,
+          "shot_type": "pov",
+          "description": "Point-of-view shot from character perspective",
+          "duration_seconds": 5.6,
+          "dialogue": null,
+          "action": null,
+          "camera_movement": "static",
+          "visual_prompt": "first-person perspective, immersive, decay, peeling wallpaper, complete darkness with flashlight, cinematic lighting, film grain, 35mm, professional color grading",
+          "characters": [],
+          "emotional_tone": "horror",
+          "generated_image_path": null,
+          "generated_video_path": null
+        }
+      ],
+      "characters": [
+        "Alex",
+        "Morgan"
+      ],
+      "environment_prompt": "decay, peeling wallpaper, complete darkness with flashlight"
+    }
+  ],
+  "soundtrack": [
+    {
+      "start_time": 0.0,
+      "end_time": 3.0,
+      "mood": "mysterious",
+      "tempo": "moderate, 75-90 BPM",
+      "instruments": [
+        "muted strings",
+        "clarinet",
+        "vibraphone",
+        "electronic textures"
+      ],
+      "description": "Intro: Enigmatic, curious theme with unexpected turns",
+      "generated_audio_path": null
+    },
+    {
+      "start_time": 3.0,
+      "end_time": 22.4,
+      "mood": "mysterious",
+      "tempo": "moderate, 75-90 BPM",
+      "instruments": [
+        "muted strings",
+        "clarinet",
+        "vibraphone",
+        "electronic textures"
+      ],
+      "description": "Main: Enigmatic, curious theme with unexpected turns",
+      "generated_audio_path": null
+    },
+    {
+      "start_time": 22.4,
+      "end_time": 25.4,
+      "mood": "horror",
+      "tempo": "irregular, unsettling",
+      "instruments": [
+        "dissonant strings",
+        "prepared piano",
+        "electronic drones",
+        "found sounds"
+      ],
+      "description": "Intro: Atonal, unsettling soundscape with sudden stings",
+      "generated_audio_path": null
+    },
+    {
+      "start_time": 25.4,
+      "end_time": 44.8,
+      "mood": "horror",
+      "tempo": "irregular, unsettling",
+      "instruments": [
+        "dissonant strings",
+        "prepared piano",
+        "electronic drones",
+        "found sounds"
+      ],
+      "description": "Main: Atonal, unsettling soundscape with sudden stings",
+      "generated_audio_path": null
+    },
+    {
+      "start_time": 44.8,
+      "end_time": 47.8,
+      "mood": "tense",
+      "tempo": "building, 90-120 BPM",
+      "instruments": [
+        "low strings",
+        "synthesizer",
+        "percussion",
+        "brass stabs"
+      ],
+      "description": "Intro: Suspenseful build with dissonant undertones",
+      "generated_audio_path": null
+    },
+    {
+      "start_time": 47.8,
+      "end_time": 67.19999999999999,
+      "mood": "tense",
+      "tempo": "building, 90-120 BPM",
+      "instruments": [
+        "low strings",
+        "synthesizer",
+        "percussion",
+        "brass stabs"
+      ],
+      "description": "Main: Suspenseful build with dissonant undertones",
+      "generated_audio_path": null
+    },
+    {
+      "start_time": 67.19999999999999,
+      "end_time": 70.19999999999999,
+      "mood": "horror",
+      "tempo": "irregular, unsettling",
+      "instruments": [
+        "dissonant strings",
+        "prepared piano",
+        "electronic drones",
+        "found sounds"
+      ],
+      "description": "Intro: Atonal, unsettling soundscape with sudden stings",
+      "generated_audio_path": null
+    },
+    {
+      "start_time": 70.19999999999999,
+      "end_time": 89.6,
+      "mood": "horror",
+      "tempo": "irregular, unsettling",
+      "instruments": [
+        "dissonant strings",
+        "prepared piano",
+        "electronic drones",
+        "found sounds"
+      ],
+      "description": "Main: Atonal, unsettling soundscape with sudden stings",
+      "generated_audio_path": null
+    }
+  ],
+  "sound_cues": [
+    {
+      "timestamp": 44.8,
+      "duration": 22.4,
+      "cue_type": "ambient",
+      "description": "birds, wind in leaves, distant water",
+      "intensity": 0.3,
+      "generated_audio_path": null
+    }
+  ],
+  "edit_decisions": [
+    {
+      "shot_index": 0,
+      "transition_in": "fade_in",
+      "transition_out": "dissolve",
+      "transition_duration": 0.5,
+      "speed_adjustment": 1.0,
+      "color_grade": "cool color temperature, blue shadows"
+    },
+    {
+      "shot_index": 1,
+      "transition_in": "cut",
+      "transition_out": "dissolve",
+      "transition_duration": 0.0,
+      "speed_adjustment": 1.0,
+      "color_grade": "cool color temperature, blue shadows"
+    },
+    {
+      "shot_index": 2,
+      "transition_in": "cut",
+      "transition_out": "dissolve",
+      "transition_duration": 0.0,
+      "speed_adjustment": 1.0,
+      "color_grade": "cool color temperature, blue shadows"
+    },
+    {
+      "shot_index": 3,
+      "transition_in": "cut",
+      "transition_out": "fade_out",
+      "transition_duration": 0.0,
+      "speed_adjustment": 1.0,
+      "color_grade": "cool color temperature, blue shadows"
+    },
+    {
+      "shot_index": 4,
+      "transition_in": "fade_in",
+      "transition_out": "cut",
+      "transition_duration": 0.5,
+      "speed_adjustment": 0.9,
+      "color_grade": "desaturated, high contrast, crushed blacks"
+    },
+    {
+      "shot_index": 5,
+      "transition_in": "cut",
+      "transition_out": "cut",
+      "transition_duration": 0.0,
+      "speed_adjustment": 0.9,
+      "color_grade": "desaturated, high contrast, crushed blacks"
+    },
+    {
+      "shot_index": 6,
+      "transition_in": "cut",
+      "transition_out": "cut",
+      "transition_duration": 0.0,
+      "speed_adjustment": 0.9,
+      "color_grade": "desaturated, high contrast, crushed blacks"
+    },
+    {
+      "shot_index": 7,
+      "transition_in": "cut",
+      "transition_out": "fade_out",
+      "transition_duration": 0.0,
+      "speed_adjustment": 0.9,
+      "color_grade": "desaturated, high contrast, crushed blacks"
+    },
+    {
+      "shot_index": 8,
+      "transition_in": "fade_in",
+      "transition_out": "cut",
+      "transition_duration": 0.5,
+      "speed_adjustment": 1.0,
+      "color_grade": "high contrast, warm highlights, cool shadows"
+    },
+    {
+      "shot_index": 9,
+      "transition_in": "cut",
+      "transition_out": "cut",
+      "transition_duration": 0.0,
+      "speed_adjustment": 1.0,
+      "color_grade": "high contrast, warm highlights, cool shadows"
+    },
+    {
+      "shot_index": 10,
+      "transition_in": "cut",
+      "transition_out": "cut",
+      "transition_duration": 0.0,
+      "speed_adjustment": 1.0,
+      "color_grade": "high contrast, warm highlights, cool shadows"
+    },
+    {
+      "shot_index": 11,
+      "transition_in": "cut",
+      "transition_out": "fade_out",
+      "transition_duration": 0.0,
+      "speed_adjustment": 1.0,
+      "color_grade": "high contrast, warm highlights, cool shadows"
+    },
+    {
+      "shot_index": 12,
+      "transition_in": "fade_in",
+      "transition_out": "cut",
+      "transition_duration": 0.5,
+      "speed_adjustment": 0.9,
+      "color_grade": "desaturated, high contrast, crushed blacks"
+    },
+    {
+      "shot_index": 13,
+      "transition_in": "cut",
+      "transition_out": "cut",
+      "transition_duration": 0.0,
+      "speed_adjustment": 0.9,
+      "color_grade": "desaturated, high contrast, crushed blacks"
+    },
+    {
+      "shot_index": 14,
+      "transition_in": "cut",
+      "transition_out": "cut",
+      "transition_duration": 0.0,
+      "speed_adjustment": 0.9,
+      "color_grade": "desaturated, high contrast, crushed blacks"
+    },
+    {
+      "shot_index": 15,
+      "transition_in": "cut",
+      "transition_out": "fade_out",
+      "transition_duration": 0.0,
+      "speed_adjustment": 0.9,
+      "color_grade": "desaturated, high contrast, crushed blacks"
+    }
+  ]
+}

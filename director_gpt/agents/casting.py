@@ -1,9 +1,7 @@
 """Casting and Consistency agent for character continuity."""
 
-from typing import Optional
 
-from director_gpt.agents import BaseAgent, MessageType
-from director_gpt.models import EmotionalTone
+from director_gpt.agents import BaseAgent
 from director_gpt.models.project import ProjectState
 
 
@@ -18,23 +16,57 @@ class CastingAgent(BaseAgent):
 
     def process(self, input_data: dict) -> dict:
         """Process script to ensure consistency."""
+        mode = input_data.get("mode", "consistency")
         script = input_data.get("script", {})
         characters = script.get("characters", [])
         scenes = script.get("scenes", [])
 
         self.log(f"Analyzing {len(characters)} characters across {len(scenes)} scenes")
 
+        if mode == "critique":
+            return self._critique_script(scenes, characters)
+
         character_prompts = self._generate_character_prompts(characters)
         environment_prompts = self._generate_environment_prompts(scenes)
         consistency_notes = self._generate_consistency_notes(scenes, characters)
 
-        for char_name, prompt in character_prompts.items():
+        for char_name in character_prompts:
             self.log(f"Consistency embedding for {char_name}: created")
 
         return {
             "character_prompts": character_prompts,
             "environment_prompts": environment_prompts,
             "consistency_notes": consistency_notes,
+        }
+
+    def _critique_script(self, scenes: list[dict], characters: list[dict]) -> dict:
+        """Critique the script for continuity issues."""
+        critique_notes = []
+        character_appearances = {}
+
+        for scene in scenes:
+            for char in scene.get("characters", []):
+                character_appearances.setdefault(char, []).append(scene["scene_number"])
+
+        for char_name, scene_numbers in character_appearances.items():
+            if len(scene_numbers) > 1:
+                critique_notes.append({
+                    "type": "character_continuity",
+                    "subject": char_name,
+                    "scenes": scene_numbers,
+                    "note": f"Ensure {char_name} appears visually consistent across scenes {scene_numbers}",
+                })
+
+        if not critique_notes:
+            critique_notes.append({
+                "type": "continuity_check",
+                "subject": "all",
+                "scenes": [s.get("scene_number") for s in scenes],
+                "note": "No major continuity issues detected",
+            })
+
+        return {
+            "critique_notes": critique_notes,
         }
 
     def _generate_character_prompts(self, characters: list[dict]) -> dict[str, str]:

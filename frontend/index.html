@@ -9,88 +9,78 @@
 <body>
     <div class="container">
         <header>
+            <div class="header-status">
+                <span class="status-dot"></span>
+                <span>AI Multi-Agent Studio Ready</span>
+            </div>
             <h1>DirectorGPT</h1>
-            <p class="tagline">AI-powered multi-agent film production studio</p>
+            <p class="tagline">Collaborative multi-agent film studio orchestrating scripts, storyboards, character consistency, and sound design.</p>
         </header>
 
         <main>
-            <section class="config-section">
-                <h2>Configuration</h2>
+            <section class="form-section">
+                <h2>Production Setup</h2>
+                
                 <div class="form-group">
-                    <label for="apiKey">Gemini API Key</label>
-                    <input type="password" id="apiKey" placeholder="AIza..." autocomplete="off">
+                    <label for="prompt">Film Prompt & Story Concept</label>
+                    <textarea id="prompt" rows="3" placeholder="Describe the scene, premise, or visual story arc...">A detective receives a mysterious phone call that changes everything in a neo-noir metropolis.</textarea>
                 </div>
-                <div class="form-group">
-                    <label for="model">Model</label>
-                    <select id="model">
-                        <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                    </select>
-                </div>
-            </section>
 
-            <section class="generate-section">
-                <h2>Generate Film</h2>
-                <div class="form-group">
-                    <label for="prompt">Film Prompt</label>
-                    <textarea id="prompt" rows="3" placeholder="A detective receives a mysterious phone call that changes everything"></textarea>
-                </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="title">Title</label>
-                        <input type="text" id="title" value="Untitled">
+                        <label for="title">Film Title</label>
+                        <input type="text" id="title" value="The Midnight Signal">
                     </div>
                     <div class="form-group">
                         <label for="genre">Genre</label>
                         <select id="genre">
                             <option value="drama">Drama</option>
-                            <option value="horror">Horror</option>
-                            <option value="comedy">Comedy</option>
                             <option value="sci-fi">Sci-Fi</option>
-                            <option value="romance">Romance</option>
                             <option value="thriller">Thriller</option>
+                            <option value="horror">Horror</option>
+                            <option value="action">Action</option>
+                            <option value="comedy">Comedy</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="duration">Duration (s)</label>
-                        <input type="number" id="duration" value="60" min="10" max="300">
+                        <label for="duration">Target Duration (seconds)</label>
+                        <input type="number" id="duration" value="60" min="15" max="300">
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="enableImages"> Enable Image Generation
+
+                <div class="form-row-checkboxes">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="enableImages">
+                        <span>Storyboard Frames</span>
                     </label>
-                    <label>
-                        <input type="checkbox" id="enableVideo"> Enable Video Generation
-                    </label>
-                    <label>
-                        <input type="checkbox" id="enableAudio"> Enable Audio Generation
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="enableAudio">
+                        <span>Soundtrack & Foley Cues</span>
                     </label>
                 </div>
-                <button id="generateBtn" class="primary-btn">Generate Film</button>
-                <button id="scriptBtn" class="secondary-btn">Generate Script Only</button>
+
+                <div class="button-group">
+                    <button id="generateBtn" class="btn btn-primary">Orchestrate Full Production</button>
+                    <button id="scriptBtn" class="btn btn-secondary">Screenplay Only</button>
+                </div>
             </section>
 
             <section id="status" class="status-section hidden">
                 <div class="spinner"></div>
-                <p id="statusText">Initializing agents...</p>
+                <p id="statusText">Initializing DirectorGPT agents...</p>
             </section>
 
             <section id="results" class="results-section hidden">
-                <h2>Production Report</h2>
+                <div class="results-header">
+                    <h2>Production Overview</h2>
+                    <button id="downloadBtn" class="btn btn-small">Download Screenplay JSON</button>
+                </div>
                 <div id="reportStats" class="stats-grid"></div>
-
-                <h3>Script</h3>
+                
+                <h3 class="section-subtitle">Screenplay & Breakdown</h3>
                 <div id="scriptOutput" class="script-output"></div>
-
-                <button id="downloadBtn" class="secondary-btn">Download Script JSON</button>
             </section>
         </main>
-
-        <footer>
-            <p>DirectorGPT - Built for hackathon with Gemini API</p>
-        </footer>
     </div>
 
     <script src="app.js"></script>

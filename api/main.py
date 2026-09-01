@@ -1,15 +1,20 @@
 """FastAPI backend for DirectorGPT web deployment."""
 
+import asyncio
+import json
+import os
+import tempfile
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from pathlib import Path
-import tempfile
-import json
 
 from director_gpt.director import DirectorAgent
-from director_gpt.models.project import ProjectConfig, ProjectState
 from director_gpt.llm import LLMClient
+from director_gpt.models.project import ProjectConfig, ProjectState
+from director_gpt.utils.config import LLMConfig
 
 app = FastAPI(
     title="DirectorGPT API",
@@ -24,6 +29,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+_subscribers: set[asyncio.Queue] = set()
+
+
+class StatusUpdate(BaseModel):
+    phase: str
+    message: str
+
+
+async def _status_generator(queue: asyncio.Queue):
+    while True:
+        msg = await queue.get()
+        if msg is None:
+            break
+        yield f"data: {json.dumps(msg)}\n\n"
+
+
+@app.get("/api/stream")
+async def stream_status():
+    queue: asyncio.Queue = asyncio.Queue()
+    _subscribers.add(queue)
+    return StreamingResponse(
+        _status_generator(queue),
+        media_type="text/event-stream",
+    )
 
 
 class ProduceRequest(BaseModel):
@@ -79,12 +109,21 @@ async def produce(req: ProduceRequest):
             llm_config = LLMConfig(
                 provider=req.llm_provider,
                 model=req.llm_model,
-                api_key=req.llm_api_key,
+                api_key=req.llm_api_key or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY"),
             )
             llm_client = LLMClient(llm_config)
 
             state = ProjectState(config=config)
             director = DirectorAgent(state, llm_client=llm_client)
+
+            def _notify(phase: str, message: str):
+                for sub in list(_subscribers):
+                    try:
+                        sub.put_nowait({"phase": phase, "message": message})
+                    except asyncio.QueueFull:
+                        pass
+
+            _notify("initialization", "Starting production...")
 
             script = director.produce_film(
                 prompt=req.prompt,
@@ -98,6 +137,8 @@ async def produce(req: ProduceRequest):
             script_data = json.loads(script_path.read_text()) if script_path.exists() else script.to_dict()
 
             state.save_state()
+
+            _notify("complete", "Production complete!")
 
             return {
                 "success": True,
@@ -117,7 +158,7 @@ async def generate_script(req: ScriptRequest):
         llm_config = LLMConfig(
             provider=req.llm_provider,
             model=req.llm_model,
-            api_key=req.llm_api_key,
+            api_key=req.llm_api_key or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY"),
         )
         llm_client = LLMClient(llm_config)
 

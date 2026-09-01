@@ -1,0 +1,8 @@
+{
+  "title": "The Call",
+  "status": "placeholder",
+  "message": "Enable video generation to produce actual video output",
+  "scenes": 3,
+  "total_shots": 12,
+  "duration": 60.0
+}

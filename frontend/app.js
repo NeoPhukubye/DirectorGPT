@@ -9,8 +9,6 @@ const statusSection = document.getElementById('status');
 const statusText = document.getElementById('statusText');
 const resultsSection = document.getElementById('results');
 
-let statusEventSource = null;
-
 function showStatus(message) {
     statusText.textContent = message;
     statusSection.classList.remove('hidden');
@@ -35,11 +33,10 @@ function getRequestData() {
         fps: 24,
         resolution: '1920x1080',
         enable_images: document.getElementById('enableImages').checked,
-        enable_video: document.getElementById('enableVideo').checked,
+        enable_video: false,
         enable_audio: document.getElementById('enableAudio').checked,
         llm_provider: 'gemini',
-        llm_model: document.getElementById('model').value,
-        llm_api_key: document.getElementById('apiKey').value || null,
+        llm_model: 'gemini-2.0-flash',
     };
 }
 
@@ -49,8 +46,7 @@ function getScriptRequestData() {
         genre: document.getElementById('genre').value,
         duration: parseFloat(document.getElementById('duration').value) || 60,
         llm_provider: 'gemini',
-        llm_model: document.getElementById('model').value,
-        llm_api_key: document.getElementById('apiKey').value || null,
+        llm_model: 'gemini-2.0-flash',
     };
 }
 
@@ -71,7 +67,7 @@ function renderReport(report) {
         </div>
         <div class="stat-card">
             <div class="stat-value">${(report.estimated_duration || 0).toFixed(1)}s</div>
-            <div class="stat-label">Duration</div>
+            <div class="stat-label">Est. Duration</div>
         </div>
         <div class="stat-card">
             <div class="stat-value">${report.sound_cues || 0}</div>
@@ -82,66 +78,7 @@ function renderReport(report) {
 
 function renderScript(script) {
     const output = document.getElementById('scriptOutput');
-    if (!script || !script.scenes) {
-        output.innerHTML = `<pre>${escapeHtml(JSON.stringify(script, null, 2))}</pre>`;
-        return;
-    }
-
-    const charactersHtml = (script.characters || []).map(c => `
-        <div class="character-card">
-            <div class="character-name">${escapeHtml(c.name)}</div>
-            <div class="character-desc">${escapeHtml(c.description)}</div>
-            <div class="character-voice">Voice: ${escapeHtml(c.voice_description || 'N/A')}</div>
-        </div>
-    `).join('');
-
-    const scenesHtml = (script.scenes || []).map(s => {
-        const shotsHtml = (s.shots || []).map(sh => `
-            <div class="shot-card">
-                <div class="shot-header">
-                    <span class="shot-number">Shot ${sh.shot_number}</span>
-                    <span class="shot-type">${sh.shot_type}</span>
-                    <span class="shot-duration">${sh.duration_seconds}s</span>
-                </div>
-                <div class="shot-body">${escapeHtml(sh.description)}</div>
-                ${sh.dialogue ? `<div class="shot-dialogue">"${escapeHtml(sh.dialogue)}"</div>` : ''}
-                <div class="shot-meta">Camera: ${escapeHtml(sh.camera_movement || 'static')}</div>
-            </div>
-        `).join('');
-
-        return `
-            <div class="scene-card">
-                <div class="scene-header">
-                    <span class="scene-number">Scene ${s.scene_number}</span>
-                    <span class="scene-title">${escapeHtml(s.title)}</span>
-                </div>
-                <div class="scene-meta">
-                    <span class="badge">${s.time_of_day}</span>
-                    <span class="badge">${s.emotional_tone}</span>
-                </div>
-                <div class="scene-body">${escapeHtml(s.description)}</div>
-                <div class="scene-location"><strong>Location:</strong> ${escapeHtml(s.location)}</div>
-                <div class="shots-grid">${shotsHtml}</div>
-            </div>
-        `;
-    }).join('');
-
-    output.innerHTML = `
-        <div class="script-structured">
-            <div class="script-header">
-                <h2 class="script-title">${escapeHtml(script.title)}</h2>
-                <p class="script-logline">${escapeHtml(script.logline)}</p>
-            </div>
-            <div class="script-section">
-                <h3>Characters</h3>
-                <div class="characters-grid">${charactersHtml}</div>
-            </div>
-            <div class="script-section">
-                <h3>Scenes</h3>
-                ${scenesHtml}
-            </div>
-        </div>
-    `;
+    output.innerHTML = `<pre>${escapeHtml(JSON.stringify(script, null, 2))}</pre>`;
 }
 
 function escapeHtml(text) {
@@ -167,39 +104,18 @@ async function callApi(endpoint, data) {
     return response.json();
 }
 
-function connectStatusStream() {
-    if (statusEventSource) {
-        statusEventSource.close();
-    }
-    statusEventSource = new EventSource(`${API_BASE}/api/stream`);
-    statusEventSource.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        showStatus(msg.message);
-    };
-    statusEventSource.onerror = () => {
-        statusEventSource.close();
-        statusEventSource = null;
-    };
-}
-
 generateBtn.addEventListener('click', async () => {
     const data = getRequestData();
-    if (!data.llm_api_key) {
-        alert('Please enter your Gemini API key');
-        return;
-    }
-    if (!data.prompt) {
+    if (!data.prompt.trim()) {
         alert('Please enter a film prompt');
         return;
     }
 
     generateBtn.disabled = true;
-    showStatus('Connecting to status stream...');
-    connectStatusStream();
+    showStatus('Initializing DirectorGPT agents...');
 
     try {
         const result = await callApi('/api/produce', data);
-
         if (result.success) {
             renderReport(result.report);
             renderScript(result.script);
@@ -211,26 +127,18 @@ generateBtn.addEventListener('click', async () => {
         statusSection.classList.remove('hidden');
     } finally {
         generateBtn.disabled = false;
-        if (statusEventSource) {
-            statusEventSource.close();
-            statusEventSource = null;
-        }
     }
 });
 
 scriptBtn.addEventListener('click', async () => {
     const data = getScriptRequestData();
-    if (!data.llm_api_key) {
-        alert('Please enter your Gemini API key');
-        return;
-    }
-    if (!data.prompt) {
+    if (!data.prompt.trim()) {
         alert('Please enter a film prompt');
         return;
     }
 
     scriptBtn.disabled = true;
-    showStatus('Generating script...');
+    showStatus('Screenwriter is generating screenplay...');
 
     try {
         const result = await callApi('/api/script', data);
@@ -244,7 +152,7 @@ scriptBtn.addEventListener('click', async () => {
             });
             renderScript(result.script);
             showResults();
-            downloadBtn.onclick = () => downloadJson(result.script, 'script_only.json');
+            downloadBtn.onclick = () => downloadJson(result.script, 'screenplay.json');
         }
     } catch (error) {
         showStatus(`Error: ${error.message}`);

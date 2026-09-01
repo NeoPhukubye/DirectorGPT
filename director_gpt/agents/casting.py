@@ -4,6 +4,7 @@ from typing import Optional
 
 from director_gpt.agents import BaseAgent, MessageType
 from director_gpt.models import EmotionalTone
+from director_gpt.models.project import ProjectState
 
 
 class CastingAgent(BaseAgent):
@@ -11,6 +12,9 @@ class CastingAgent(BaseAgent):
 
     def get_role_description(self) -> str:
         return "Ensures visual consistency of characters and environments across all generated assets"
+
+    def __init__(self, name: str, state: ProjectState, llm_client=None):
+        super().__init__(name, state, llm_client=llm_client)
 
     def process(self, input_data: dict) -> dict:
         """Process script to ensure consistency."""

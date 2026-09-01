@@ -41,12 +41,13 @@ class AgentMessage:
 class BaseAgent(ABC):
     """Base class for all DirectorGPT agents."""
 
-    def __init__(self, name: str, state: ProjectState):
+    def __init__(self, name: str, state: ProjectState, llm_client=None):
         self.name = name
         self.state = state
         self.inbox: list[AgentMessage] = []
         self.outbox: list[AgentMessage] = []
         self.context: dict = {}
+        self.llm_client = llm_client
 
     @abstractmethod
     def process(self, input_data: dict) -> dict:

@@ -1,5 +1,6 @@
 """Screenwriter agent for script generation and storyboarding."""
 
+import json
 import math
 from typing import Optional
 
@@ -22,12 +23,50 @@ class ScreenwriterAgent(BaseAgent):
         self.log(f"Writing screenplay for: '{prompt[:60]}...'")
         self.log(f"Target duration: {target_duration}s, Genre: {genre}")
 
+        if self.llm_client:
+            return self._generate_with_llm(prompt, target_duration, genre)
+
         characters = self._create_characters(prompt, genre)
         self.log(f"Created {len(characters)} characters")
 
         scenes = self._create_scenes(prompt, genre, target_duration, characters)
         self.log(f"Created {len(scenes)} scenes with {sum(len(s['shots']) for s in scenes)} total shots")
 
+        return {
+            "characters": characters,
+            "scenes": scenes,
+            "genre": genre,
+        }
+
+    def _generate_with_llm(self, prompt: str, target_duration: float, genre: str) -> dict:
+        system_prompt = (
+            "You are a professional screenwriter. Generate a JSON screenplay structure "
+            "with characters and scenes. Each scene has shots with shot_type, description, "
+            "duration_seconds, dialogue, action, camera_movement, visual_prompt, characters, "
+            "and emotional_tone. Valid shot_types: WIDE, MEDIUM, CLOSE_UP, EXTREME_CLOSE_UP, "
+            "OVER_SHOULDER, POV, INSERT, AERIAL. Valid emotional_tones: neutral, tense, "
+            "mysterious, joyful, horror, serene, romantic, melancholic, triumphant, angry."
+        )
+
+        user_prompt = (
+            f"Write a {genre} screenplay for: {prompt}\n"
+            f"Target duration: {target_duration} seconds\n"
+            f"Return only valid JSON with 'characters' and 'scenes' keys."
+        )
+
+        try:
+            response = self.llm_client.generate(user_prompt, system_prompt=system_prompt)
+            data = json.loads(response)
+            if "characters" in data and "scenes" in data:
+                return data
+        except Exception as e:
+            self.log(f"LLM generation failed: {e}. Falling back to rule-based.")
+
+        return self._fallback_generation(prompt, target_duration, genre)
+
+    def _fallback_generation(self, prompt: str, target_duration: float, genre: str) -> dict:
+        characters = self._create_characters(prompt, genre)
+        scenes = self._create_scenes(prompt, genre, target_duration, characters)
         return {
             "characters": characters,
             "scenes": scenes,

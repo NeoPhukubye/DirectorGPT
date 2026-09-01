@@ -4,6 +4,7 @@ from typing import Optional
 
 from director_gpt.agents import BaseAgent, MessageType
 from director_gpt.models import EmotionalTone, SoundtrackSegment, SoundCue
+from director_gpt.models.project import ProjectState
 
 
 class SoundDesignerAgent(BaseAgent):
@@ -11,6 +12,9 @@ class SoundDesignerAgent(BaseAgent):
 
     def get_role_description(self) -> str:
         return "Creates emotionally-matched soundtrack and precisely-timed foley effects"
+
+    def __init__(self, name: str, state: ProjectState, llm_client=None):
+        super().__init__(name, state, llm_client=llm_client)
 
     def process(self, input_data: dict) -> dict:
         """Generate soundtrack and sound cues from script."""

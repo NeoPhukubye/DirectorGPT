@@ -7,6 +7,7 @@ from typing import Optional
 
 from director_gpt.agents import BaseAgent, MessageType
 from director_gpt.models import TransitionType, EditDecision
+from director_gpt.models.project import ProjectState
 
 
 class EditorAgent(BaseAgent):
@@ -14,6 +15,9 @@ class EditorAgent(BaseAgent):
 
     def get_role_description(self) -> str:
         return "Assembles raw footage into a polished final cut with transitions and color grading"
+
+    def __init__(self, name: str, state: ProjectState, llm_client=None):
+        super().__init__(name, state, llm_client=llm_client)
 
     def process(self, input_data: dict) -> dict:
         """Generate edit decisions for the film."""

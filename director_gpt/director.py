@@ -16,14 +16,15 @@ from director_gpt.models.project import ProjectState, ProductionPhase
 class DirectorAgent:
     """Central orchestrator that coordinates all production agents."""
 
-    def __init__(self, state: ProjectState):
+    def __init__(self, state: ProjectState, llm_client=None):
         self.state = state
         self.script: Optional[FilmScript] = None
+        self.llm_client = llm_client
 
-        self.screenwriter = ScreenwriterAgent("Screenwriter", state)
-        self.casting = CastingAgent("Casting", state)
-        self.sound = SoundDesignerAgent("SoundDesigner", state)
-        self.editor = EditorAgent("Editor", state)
+        self.screenwriter = ScreenwriterAgent("Screenwriter", state, llm_client=llm_client)
+        self.casting = CastingAgent("Casting", state, llm_client=llm_client)
+        self.sound = SoundDesignerAgent("SoundDesigner", state, llm_client=llm_client)
+        self.editor = EditorAgent("Editor", state, llm_client=llm_client)
 
         self.agents = {
             "Screenwriter": self.screenwriter,

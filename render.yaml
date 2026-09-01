@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: directorgpt-api
+    runtime: python
+    buildCommand: pip install -e .
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: GEMINI_API_KEY
+        sync: false

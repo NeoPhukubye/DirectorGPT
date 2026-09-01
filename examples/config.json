@@ -1,0 +1,23 @@
+{
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-4",
+    "temperature": 0.7,
+    "max_tokens": 4096
+  },
+  "image_gen": {
+    "provider": "dall-e-3",
+    "size": "1920x1080",
+    "quality": "hd"
+  },
+  "audio": {
+    "provider": "elevenlabs",
+    "sample_rate": 44100
+  },
+  "video": {
+    "provider": "runway",
+    "fps": 24,
+    "resolution": [1920, 1080]
+  },
+  "output_dir": "./output"
+}

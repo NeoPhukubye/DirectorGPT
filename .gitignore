@@ -4,7 +4,6 @@ __pycache__/
 .venv/
 venv/
 .env
-output/
 *.egg-info/
 dist/
 build/

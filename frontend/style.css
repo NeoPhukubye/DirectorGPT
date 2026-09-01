@@ -217,6 +217,178 @@ section h3 {
     color: #ccc;
 }
 
+.script-structured {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.script-header {
+    border-bottom: 1px solid #2a2a3a;
+    padding-bottom: 1rem;
+}
+
+.script-title {
+    font-size: 1.5rem;
+    color: #fff;
+    margin-bottom: 0.5rem;
+}
+
+.script-logline {
+    color: #aaa;
+    font-style: italic;
+}
+
+.script-section h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    color: #ddd;
+}
+
+.characters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.character-card {
+    background: #252540;
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid #3a3a5a;
+}
+
+.character-name {
+    font-weight: 700;
+    color: #667eea;
+    margin-bottom: 0.5rem;
+}
+
+.character-desc {
+    font-size: 0.9rem;
+    color: #ccc;
+    margin-bottom: 0.5rem;
+}
+
+.character-voice {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.scene-card {
+    background: #1a1a30;
+    border-radius: 10px;
+    padding: 1.25rem;
+    border: 1px solid #2a2a4a;
+    margin-bottom: 1rem;
+}
+
+.scene-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.scene-number {
+    background: #667eea;
+    color: #fff;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+}
+
+.scene-title {
+    font-size: 1.1rem;
+    color: #fff;
+    font-weight: 600;
+}
+
+.scene-meta {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.badge {
+    background: #2a2a4a;
+    color: #bbb;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    text-transform: capitalize;
+}
+
+.scene-body {
+    color: #ccc;
+    margin-bottom: 0.5rem;
+}
+
+.scene-location {
+    font-size: 0.9rem;
+    color: #888;
+    margin-bottom: 1rem;
+}
+
+.shots-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.shot-card {
+    background: #0f0f1a;
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid #2a2a3a;
+}
+
+.shot-header {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.shot-number {
+    font-weight: 700;
+    color: #667eea;
+}
+
+.shot-type {
+    background: #252540;
+    color: #ddd;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    text-transform: capitalize;
+}
+
+.shot-duration {
+    color: #888;
+    font-size: 0.85rem;
+    margin-left: auto;
+}
+
+.shot-body {
+    color: #bbb;
+    margin-bottom: 0.5rem;
+}
+
+.shot-dialogue {
+    color: #aaa;
+    font-style: italic;
+    padding-left: 1rem;
+    border-left: 2px solid #667eea;
+    margin-bottom: 0.5rem;
+}
+
+.shot-meta {
+    font-size: 0.85rem;
+    color: #666;
+}
+
 footer {
     text-align: center;
     padding: 2rem;

@@ -1,12 +1,11 @@
 """Editor agent for video assembly and post-production."""
 
-import subprocess
 import json
+import subprocess
 from pathlib import Path
-from typing import Optional
 
-from director_gpt.agents import BaseAgent, MessageType
-from director_gpt.models import TransitionType, EditDecision
+from director_gpt.agents import BaseAgent
+from director_gpt.models import EditDecision, TransitionType
 from director_gpt.models.project import ProjectState
 
 
@@ -97,7 +96,7 @@ class EditorAgent(BaseAgent):
         }
         return adjustments.get(emotional_tone, 1.0)
 
-    def _get_color_grade(self, emotional_tone: str) -> Optional[str]:
+    def _get_color_grade(self, emotional_tone: str) -> str | None:
         """Get color grading preset based on emotional tone."""
         grades = {
             "teal_orange": "high contrast, warm highlights, cool shadows",
@@ -127,23 +126,19 @@ class EditorAgent(BaseAgent):
         commands = []
 
         commands.append(
-            "# Step 1: Concatenate all shot videos into segments"
+            "# Step 1: Prepare clips and build filter_complex"
         )
 
         commands.append(
-            "# Step 2: Apply transitions between shots"
+            "# Step 2: Concatenate with transitions and color grading"
         )
 
         commands.append(
-            "# Step 3: Apply color grading"
+            "# Step 3: Mix audio tracks"
         )
 
         commands.append(
-            "# Step 4: Mix audio tracks"
-        )
-
-        commands.append(
-            "# Step 5: Final output"
+            "# Step 4: Final output"
         )
 
         return commands
@@ -170,37 +165,178 @@ class EditorAgent(BaseAgent):
         """Assemble video using FFmpeg."""
         self.log("Assembling video with FFmpeg")
 
-        concat_file = output_path.parent / "concat_list.txt"
-        filter_complex = self._build_filter_complex(script)
+        tmpdir = output_path.parent / "ffmpeg_inputs"
+        tmpdir.mkdir(parents=True, exist_ok=True)
 
-        self.log(f"Filter complex: {filter_complex[:100]}...")
-
-        return True
-
-    def _build_filter_complex(self, script) -> str:
-        """Build FFmpeg filter complex for transitions and effects."""
-        filter_parts = []
-        shot_index = 0
-
+        shots = []
         for scene in script.scenes:
-            for shot in scene.shots:
-                inputs = f"[{shot_index}:v]"
-                speed = 1.0
+            shots.extend(scene.shots)
 
-                if speed != 1.0:
-                    filter_parts.append(
-                        f"{inputs}setpts={speed}*PTS[v{shot_index}]"
-                    )
-                else:
-                    filter_parts.append(f"{inputs}copy[v{shot_index}]")
+        edit_decisions = [d.to_dict() if hasattr(d, "to_dict") else d for d in getattr(script, "edit_decisions", [])]
 
-                shot_index += 1
+        input_paths = []
+        for i, shot in enumerate(shots):
+            path = getattr(shot, "generated_video_path", None)
+            if path and Path(path).exists():
+                input_paths.append(Path(path))
+            else:
+                clip = tmpdir / f"shot_{i:04d}.mp4"
+                self._generate_placeholder_clip(shot, clip)
+                input_paths.append(clip)
 
-        if filter_parts:
-            filter_parts.append(
-                f"{''.join(f'[v{i}]' for i in range(shot_index))}concat=n={shot_index}:v=1:a=0[outv]"
+        filter_complex = self._build_filter_complex(script, edit_decisions)
+
+        cmd = ["ffmpeg", "-y"]
+        for p in input_paths:
+            cmd.extend(["-i", str(p)])
+
+        cmd.extend([
+            "-filter_complex", filter_complex,
+            "-map", "[outv]",
+            "-c:v", "libx264",
+            "-pix_fmt", "yuv420p",
+            str(output_path),
+        ])
+
+        self.log(f"Running FFmpeg: {' '.join(cmd)}")
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+            if result.returncode != 0:
+                self.log(f"FFmpeg stderr: {result.stderr[:500]}")
+                self.state.add_error(result.stderr)
+                return False
+            self.log(f"Final cut saved: {output_path}")
+            return True
+        except FileNotFoundError:
+            self.log("FFmpeg not found on system")
+            self.state.add_error("FFmpeg not installed")
+            return False
+
+    def _generate_placeholder_clip(self, shot, output_path: Path) -> None:
+        """Generate a colored placeholder video clip for a shot."""
+        duration = max(getattr(shot, "duration_seconds", 2.0), 1.0)
+        cmd = [
+            "ffmpeg", "-y",
+            "-f", "lavfi", "-i",
+            f"color=c=0x1a1a2e:s=1920x1080:d={duration}:r=24",
+            "-vf", f"drawtext=text='Shot {getattr(shot, 'shot_number', 0)}':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=(h-text_h)/2",
+            "-c:v", "libx264", "-pix_fmt", "yuv420p",
+            str(output_path),
+        ]
+        subprocess.run(cmd, capture_output=True, text=True, check=False)
+
+    def _build_filter_complex(self, script, edit_decisions: list[dict]) -> str:
+        """Build FFmpeg filter complex for transitions and effects."""
+        shots = []
+        for scene in script.scenes:
+            shots.extend(scene.shots)
+
+        if not shots:
+            return ""
+
+        n = len(shots)
+        decision_map = {d["shot_index"]: d for d in edit_decisions}
+
+        xfade_type_map = {
+            "cut": "fade",
+            "fade_in": "fade",
+            "fade_out": "fade",
+            "dissolve": "dissolve",
+            "wipe": "wipeleft",
+            "jump_cut": "fade",
+            "match_cut": "fade",
+        }
+
+        def input_ref(idx: int) -> str:
+            return f"[{idx}:v]"
+
+        def next_label(prefix: str = "v") -> str:
+            next_label.counter += 1
+            return f"{prefix}{next_label.counter}"
+        next_label.counter = -1
+
+        segments = []
+        seg_start = 0
+        for i in range(1, n):
+            prev_decision = decision_map.get(i - 1, {})
+            trans_out = prev_decision.get("transition_out", "cut")
+            if trans_out == "cut":
+                segments.append(list(range(seg_start, i)))
+                seg_start = i
+        segments.append(list(range(seg_start, n)))
+
+        filter_parts = []
+        segment_outputs = []
+
+        for seg in segments:
+            has_xfade = any(
+                decision_map.get(i, {}).get("transition_out", "cut") != "cut"
+                for i in seg[:-1]
             )
 
+            if len(seg) == 1:
+                shot_idx = seg[0]
+                decision = decision_map.get(shot_idx, {})
+                speed = decision.get("speed_adjustment", 1.0)
+                if speed != 1.0:
+                    label = next_label("s")
+                    filter_parts.append(f"{input_ref(shot_idx)}setpts={speed}*PTS[{label}]")
+                    segment_outputs.append(f"[{label}]")
+                else:
+                    segment_outputs.append(input_ref(shot_idx))
+            elif not has_xfade:
+                inputs = "".join(input_ref(i) for i in seg)
+                label = next_label("seg")
+                filter_parts.append(f"{inputs}concat=n={len(seg)}:v=1:a=0[{label}]")
+                segment_outputs.append(f"[{label}]")
+            else:
+                prev_label = None
+                for j, shot_idx in enumerate(seg):
+                    decision = decision_map.get(shot_idx, {})
+                    speed = decision.get("speed_adjustment", 1.0)
+
+                    if j == 0:
+                        if speed != 1.0:
+                            label = next_label("s")
+                            filter_parts.append(f"{input_ref(shot_idx)}setpts={speed}*PTS[{label}]")
+                            prev_label = f"[{label}]"
+                        else:
+                            prev_label = input_ref(shot_idx)
+                    else:
+                        prev_decision = decision_map.get(seg[j - 1], {})
+                        trans_out = prev_decision.get("transition_out", "cut")
+                        trans_dur = float(prev_decision.get("transition_duration", 0.5))
+                        xfade = xfade_type_map.get(trans_out, "fade")
+
+                        offset = 0.0
+                        for k in range(j):
+                            s = shots[seg[k]]
+                            sp = decision_map.get(seg[k], {}).get("speed_adjustment", 1.0)
+                            offset += getattr(s, "duration_seconds", 2.0) / max(sp, 0.1)
+                        offset -= trans_dur
+                        offset = max(offset, 0.0)
+
+                        if speed != 1.0:
+                            label = next_label("s")
+                            filter_parts.append(f"{input_ref(shot_idx)}setpts={speed}*PTS[{label}]")
+                            cur_input = f"[{label}]"
+                        else:
+                            cur_input = input_ref(shot_idx)
+
+                        out_label = next_label("seg")
+                        filter_parts.append(
+                            f"{prev_label}{cur_input}xfade=transition={xfade}:duration={trans_dur}:offset={offset}[{out_label}]"
+                        )
+                        prev_label = f"[{out_label}]"
+
+                segment_outputs.append(prev_label)
+
+        total = len(segment_outputs)
+        if total == 1:
+            return ";".join(filter_parts)
+
+        concat_inputs = "".join(segment_outputs)
+        filter_parts.append(f"{concat_inputs}concat=n={total}:v=1:a=0[outv]")
         return ";".join(filter_parts)
 
     def _create_placeholder_output(self, script, output_path: Path) -> bool:
@@ -252,7 +388,7 @@ class EditorAgent(BaseAgent):
                         f'# Shot {shot_index}: Scene {scene.scene_number}, Shot {shot.shot_number}'
                     )
                     lines.append(
-                        f'cp "{shot.generated_video_PATH}" "$TMPDIR/shot_{shot_index:04d}.mp4"'
+                        f'cp "{shot.generated_video_path}" "$TMPDIR/shot_{shot_index:04d}.mp4"'
                     )
                 shot_index += 1
 

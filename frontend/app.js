@@ -1,6 +1,6 @@
 const API_BASE = window.location.hostname === 'localhost'
     ? 'http://localhost:8000'
-    : 'https://directorgpt-api.onrender.com';
+    : 'https://directorgpt.onrender.com';
 
 const generateBtn = document.getElementById('generateBtn');
 const scriptBtn = document.getElementById('scriptBtn');

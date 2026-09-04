@@ -45,6 +45,10 @@ class DirectorAgent:
 
         self.conversation_log: list[dict] = []
 
+    def log(self, message: str):
+        """Log director activity."""
+        self.state.add_message("Director", message)
+
     def produce_film(self, prompt: str, title: str = "Untitled",
                      genre: str = "drama", target_duration: float = 60.0) -> FilmScript:
         """Execute the full film production pipeline."""

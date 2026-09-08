@@ -99,13 +99,13 @@ class DirectorAgent:
                 location=s["location"],
                 time_of_day=s["time_of_day"],
                 description=s["description"],
-                emotional_tone=EmotionalTone(s["emotional_tone"]) if isinstance(s["emotional_tone"], str) else s["emotional_tone"],
+                emotional_tone=EmotionalTone(s["emotional_tone"]) if isinstance(s["emotional_tone"], str) and s["emotional_tone"] in [e.value for e in EmotionalTone] else EmotionalTone.NEUTRAL,
                 characters=s.get("characters", []),
                 environment_prompt=s.get("environment_prompt"),
                 shots=[
                     Shot(
                         shot_number=sh["shot_number"],
-                        shot_type=ShotType(sh["shot_type"]) if isinstance(sh["shot_type"], str) else sh["shot_type"],
+                        shot_type=ShotType(sh["shot_type"]) if isinstance(sh["shot_type"], str) and sh["shot_type"] in [st.value for st in ShotType] else ShotType.MEDIUM,
                         description=sh["description"],
                         duration_seconds=sh["duration_seconds"],
                         dialogue=sh.get("dialogue"),
@@ -113,7 +113,7 @@ class DirectorAgent:
                         camera_movement=sh.get("camera_movement"),
                         visual_prompt=sh.get("visual_prompt"),
                         characters=sh.get("characters", []),
-                        emotional_tone=EmotionalTone(sh["emotional_tone"]) if isinstance(sh.get("emotional_tone", "neutral"), str) else sh.get("emotional_tone", EmotionalTone.NEUTRAL),
+                        emotional_tone=EmotionalTone(sh["emotional_tone"]) if isinstance(sh.get("emotional_tone"), str) and sh["emotional_tone"] in [e.value for e in EmotionalTone] else EmotionalTone.NEUTRAL,
                     )
                     for sh in s.get("shots", [])
                 ],
@@ -282,10 +282,10 @@ class DirectorAgent:
         ]
 
         output_path = self.state.config.output_dir / "final_cut.mp4"
-        self.editor.assemble_film(self.script, str(output_path))
+        actual_output = self.editor.assemble_film(self.script, str(output_path))
 
-        self.state.add_artifact("final_cut", output_path)
-        self.state.add_message("Director", f"Film assembled: {output_path}")
+        self.state.add_artifact("final_cut", Path(actual_output))
+        self.state.add_message("Director", f"Film assembled: {actual_output}")
 
     def _merge_visual_prompts(self, shot_prompt: str | None, character_prompt: str) -> str:
         """Merge shot description with character consistency prompt."""

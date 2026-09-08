@@ -1,9 +1,12 @@
 """Sound Designer agent for soundtrack and foley generation."""
 
+import os
+from pathlib import Path
 
 from director_gpt.agents import BaseAgent
 from director_gpt.models import EmotionalTone, SoundCue, SoundtrackSegment
 from director_gpt.models.project import ProjectState
+from director_gpt.utils import safe_import
 
 
 class SoundDesignerAgent(BaseAgent):
@@ -33,9 +36,88 @@ class SoundDesignerAgent(BaseAgent):
         self.log(f"Created {len(sound_cues)} sound cues")
 
         return {
-            "soundtrack": soundtrack,
-            "sound_cues": sound_cues,
+            "soundtrack": [s.to_dict() if hasattr(s, 'to_dict') else s for s in soundtrack],
+            "sound_cues": [c.to_dict() if hasattr(c, 'to_dict') else c for c in sound_cues],
         }
+
+    def generate_audio_assets(self, script: dict) -> dict:
+        """Generate actual audio files for soundtrack segments and sound cues."""
+        audio_dir = self.state.config.output_dir / "audio"
+        audio_dir.mkdir(exist_ok=True)
+
+        elevenlabs_mod, err = safe_import("elevenlabs")
+        if not elevenlabs_mod:
+            self.log(f"ElevenLabs not available: {err}")
+            return {"generated": False, "error": err}
+
+        api_key = os.getenv("ELEVENLABS_API_KEY")
+        if not api_key:
+            self.log("ELEVENLABS_API_KEY not set")
+            return {"generated": False, "error": "ELEVENLABS_API_KEY not set"}
+
+        from elevenlabs.client import ElevenLabs
+        client = ElevenLabs(api_key=api_key)
+
+        soundtrack = script.get("soundtrack", [])
+        sound_cues = script.get("sound_cues", [])
+
+        generated_soundtrack = []
+        for i, segment in enumerate(soundtrack):
+            try:
+                audio_path = self._generate_audio_segment(client, segment, audio_dir, i, "soundtrack")
+                if audio_path:
+                    segment["generated_audio_path"] = str(audio_path)
+                    generated_soundtrack.append(audio_path)
+            except Exception as e:
+                self.log(f"Soundtrack segment {i} generation failed: {e}")
+
+        generated_cues = []
+        for i, cue in enumerate(sound_cues):
+            try:
+                audio_path = self._generate_audio_segment(client, cue, audio_dir, i, "cue")
+                if audio_path:
+                    cue["generated_audio_path"] = str(audio_path)
+                    generated_cues.append(audio_path)
+            except Exception as e:
+                self.log(f"Sound cue {i} generation failed: {e}")
+
+        self.log(f"Generated {len(generated_soundtrack)} soundtrack segments, {len(generated_cues)} sound cues")
+        return {
+            "generated": True,
+            "soundtrack": generated_soundtrack,
+            "sound_cues": generated_cues,
+        }
+
+    def _generate_audio_segment(self, client, segment: dict, audio_dir: Path, index: int, segment_type: str) -> Path | None:
+        """Generate a single audio segment using ElevenLabs."""
+        description = segment.get("description", "")
+        cue_type = segment.get("cue_type", "")
+        mood = segment.get("mood", "neutral")
+
+        if segment_type == "soundtrack":
+            text = f"{mood} music. {description}"
+        else:
+            text = f"{cue_type} sound effect. {description}"
+
+        voice_id = "JBFqnCBsd6RMkjVDRZzb"  # Default voice
+        output_path = audio_dir / f"{segment_type}_{index:03d}.mp3"
+
+        if output_path.exists():
+            return output_path
+
+        audio = client.text_to_speech.convert(
+            text=text,
+            voice_id=voice_id,
+            model_id="eleven_v3",
+            output_format="mp3_44100_128",
+        )
+
+        with open(output_path, "wb") as f:
+            for chunk in audio:
+                if isinstance(chunk, bytes):
+                    f.write(chunk)
+
+        return output_path
 
     def _critique_script(self, scenes: list[dict]) -> dict:
         """Critique the script for emotional pacing issues."""

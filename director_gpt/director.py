@@ -211,7 +211,7 @@ class DirectorAgent:
             SoundtrackSegment(
                 start_time=s["start_time"],
                 end_time=s["end_time"],
-                mood=EmotionalTone(s["mood"]) if isinstance(s["mood"], str) else s["mood"],
+                mood=EmotionalTone(s["mood"]) if isinstance(s["mood"], str) and s["mood"] in [e.value for e in EmotionalTone] else EmotionalTone.NEUTRAL,
                 tempo=s["tempo"],
                 instruments=s["instruments"],
                 description=s["description"],
@@ -230,6 +230,14 @@ class DirectorAgent:
             )
             for c in sound_data.get("sound_cues", [])
         ]
+
+        if self.state.config.enable_audio_generation:
+            self.state.add_message("Director", "Generating audio assets...")
+            audio_result = self.sound.generate_audio_assets(self.script.to_dict())
+            if audio_result.get("generated"):
+                self.state.add_message("Director",
+                    f"Audio generation complete: {len(audio_result.get('soundtrack', []))} tracks, "
+                    f"{len(audio_result.get('sound_cues', []))} cues")
 
         self.state.add_message("Director", "Pre-production complete")
 

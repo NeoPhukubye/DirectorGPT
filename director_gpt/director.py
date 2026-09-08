@@ -248,7 +248,7 @@ class DirectorAgent:
                     if image_path:
                         shot.generated_image_path = str(image_path)
 
-                if self.state.config.enable_video_generation and shot.generated_image_path:
+                if self.state.config.enable_video_generation:
                     video_path = self._generate_shot_video(shot)
                     if video_path:
                         shot.generated_video_path = str(video_path)
@@ -311,14 +311,47 @@ class DirectorAgent:
         image_dir.mkdir(exist_ok=True)
         image_path = image_dir / f"scene{scene.scene_number}_shot{shot.shot_number}.png"
 
-        if shot.visual_prompt:
-            self.state.add_message("Director",
-                f"  Prompt: {shot.visual_prompt[:100]}...")
+        if image_path.exists():
+            self.log(f"  Image already exists: {image_path}")
+            return image_path
 
-        return image_path
+        if not shot.visual_prompt:
+            self.log("  No visual prompt provided, skipping image generation")
+            return None
+
+        try:
+            import os
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                self.state.add_error("OPENAI_API_KEY not set")
+                return None
+
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key)
+
+            prompt = shot.visual_prompt
+            self.state.add_message("Director", f"  Prompt: {prompt[:100]}...")
+
+            response = client.images.generate(
+                model="dall-e-3",
+                prompt=prompt,
+                size="1024x1024",
+                n=1,
+            )
+
+            image_url = response.data[0].url
+            import urllib.request
+            urllib.request.urlretrieve(image_url, image_path)
+            self.log(f"  Image saved: {image_path}")
+            return image_path
+
+        except Exception as e:
+            self.state.add_error(f"Image generation failed: {e}")
+            self.log(f"  Image generation failed: {e}")
+            return None
 
     def _generate_shot_video(self, shot: Shot) -> Path | None:
-        """Generate video clip for a shot."""
+        """Generate video clip for a shot using RunwayML text-to-video."""
         self.state.add_message("Director",
             f"Generating video: Shot {shot.shot_number}")
 
@@ -335,7 +368,50 @@ class DirectorAgent:
         video_dir.mkdir(exist_ok=True)
         video_path = video_dir / f"shot{shot.shot_number}.mp4"
 
-        return video_path
+        if video_path.exists():
+            self.log(f"  Video already exists: {video_path}")
+            return video_path
+
+        try:
+            import os
+            api_key = os.getenv("RUNWAYML_API_SECRET")
+            if not api_key:
+                self.state.add_error("RUNWAYML_API_SECRET not set")
+                return None
+
+            from runwayml import RunwayML
+            client = RunwayML(api_key=api_key)
+
+            prompt_text = shot.visual_prompt or shot.description or f"Shot {shot.shot_number}"
+            ratio = f"{self.state.config.resolution[0]}:{self.state.config.resolution[1]}"
+            duration = min(max(int(shot.duration_seconds), 1), 10)
+
+            self.state.add_message("Director", f"  Prompt: {prompt_text[:100]}...")
+
+            # Use text-to-video generation (no input image required)
+            task = client.image_to_video.create(
+                model="gen4_turbo",
+                prompt_text=prompt_text,
+                ratio=ratio,
+                duration=duration,
+            ).wait_for_task_output()
+
+            if task and hasattr(task, 'output') and task.output:
+                video_url = task.output.url if hasattr(task.output, 'url') else task.output
+                if isinstance(video_url, list):
+                    video_url = video_url[0]
+                import urllib.request
+                urllib.request.urlretrieve(video_url, video_path)
+                self.log(f"  Video saved: {video_path}")
+                return video_path
+            else:
+                self.state.add_error(f"Video generation failed: no output")
+                return None
+
+        except Exception as e:
+            self.state.add_error(f"Video generation failed: {e}")
+            self.log(f"  Video generation failed: {e}")
+            return None
 
     def _save_script(self):
         """Save the complete script to output directory."""

@@ -49,8 +49,13 @@ class DirectorAgent:
         """Log director activity."""
         self.state.add_message("Director", message)
 
-    def produce_film(self, prompt: str, title: str = "Untitled",
-                     genre: str = "drama", target_duration: float = 60.0) -> FilmScript:
+    def produce_film(
+        self,
+        prompt: str,
+        title: str = "Untitled",
+        genre: str = "drama",
+        target_duration: float = 60.0,
+    ) -> FilmScript:
         """Execute the full film production pipeline."""
 
         self.state.transition_to(ProductionPhase.DEVELOPMENT)
@@ -80,18 +85,18 @@ class DirectorAgent:
         """Development phase: Create the script and storyboard with critique-refine loop."""
         self.state.add_message("Director", "=== DEVELOPMENT PHASE ===")
 
-        screenplay_data = self.screenwriter.process({
-            "prompt": prompt,
-            "target_duration": target_duration,
-            "genre": self.script.genre,
-        })
+        screenplay_data = self.screenwriter.process(
+            {
+                "prompt": prompt,
+                "target_duration": target_duration,
+                "genre": self.script.genre,
+            }
+        )
 
         if self.llm_client:
             screenplay_data = self._refine_script_with_feedback(screenplay_data)
 
-        self.script.characters = [
-            Character(**c) for c in screenplay_data.get("characters", [])
-        ]
+        self.script.characters = [Character(**c) for c in screenplay_data.get("characters", [])]
         self.script.scenes = [
             Scene(
                 scene_number=s["scene_number"],
@@ -99,13 +104,23 @@ class DirectorAgent:
                 location=s["location"],
                 time_of_day=s["time_of_day"],
                 description=s["description"],
-                emotional_tone=EmotionalTone(s["emotional_tone"]) if isinstance(s["emotional_tone"], str) and s["emotional_tone"] in [e.value for e in EmotionalTone] else EmotionalTone.NEUTRAL,
+                emotional_tone=(
+                    EmotionalTone(s["emotional_tone"])
+                    if isinstance(s["emotional_tone"], str)
+                    and s["emotional_tone"] in [e.value for e in EmotionalTone]
+                    else EmotionalTone.NEUTRAL
+                ),
                 characters=s.get("characters", []),
                 environment_prompt=s.get("environment_prompt"),
                 shots=[
                     Shot(
                         shot_number=sh["shot_number"],
-                        shot_type=ShotType(sh["shot_type"]) if isinstance(sh["shot_type"], str) and sh["shot_type"] in [st.value for st in ShotType] else ShotType.MEDIUM,
+                        shot_type=(
+                            ShotType(sh["shot_type"])
+                            if isinstance(sh["shot_type"], str)
+                            and sh["shot_type"] in [st.value for st in ShotType]
+                            else ShotType.MEDIUM
+                        ),
                         description=sh["description"],
                         duration_seconds=sh["duration_seconds"],
                         dialogue=sh.get("dialogue"),
@@ -113,7 +128,12 @@ class DirectorAgent:
                         camera_movement=sh.get("camera_movement"),
                         visual_prompt=sh.get("visual_prompt"),
                         characters=sh.get("characters", []),
-                        emotional_tone=EmotionalTone(sh["emotional_tone"]) if isinstance(sh.get("emotional_tone"), str) and sh["emotional_tone"] in [e.value for e in EmotionalTone] else EmotionalTone.NEUTRAL,
+                        emotional_tone=(
+                            EmotionalTone(sh["emotional_tone"])
+                            if isinstance(sh.get("emotional_tone"), str)
+                            and sh["emotional_tone"] in [e.value for e in EmotionalTone]
+                            else EmotionalTone.NEUTRAL
+                        ),
                     )
                     for sh in s.get("shots", [])
                 ],
@@ -121,9 +141,11 @@ class DirectorAgent:
             for s in screenplay_data.get("scenes", [])
         ]
 
-        self.state.add_message("Director",
+        self.state.add_message(
+            "Director",
             f"Script complete: {len(self.script.scenes)} scenes, "
-            f"{sum(len(s.shots) for s in self.script.scenes)} shots")
+            f"{sum(len(s.shots) for s in self.script.scenes)} shots",
+        )
 
     def _refine_script_with_feedback(self, screenplay_data: dict) -> dict:
         """Run critique-and-refine loop between agents."""
@@ -132,24 +154,32 @@ class DirectorAgent:
         for iteration in range(max_iterations):
             self.state.add_message("Director", f"--- Critique Round {iteration + 1} ---")
 
-            casting_feedback = self.casting.process({
-                "script": screenplay_data,
-                "mode": "critique",
-            })
+            casting_feedback = self.casting.process(
+                {
+                    "script": screenplay_data,
+                    "mode": "critique",
+                }
+            )
             critique_notes = casting_feedback.get("critique_notes", [])
             if critique_notes:
-                self.state.add_message("Casting", f"Found {len(critique_notes)} continuity concerns")
+                self.state.add_message(
+                    "Casting", f"Found {len(critique_notes)} continuity concerns"
+                )
                 screenplay_data = self._apply_casting_feedback(screenplay_data, critique_notes)
             else:
                 self.state.add_message("Casting", "No continuity issues found")
 
-            sound_feedback = self.sound.process({
-                "script": screenplay_data,
-                "mode": "critique",
-            })
+            sound_feedback = self.sound.process(
+                {
+                    "script": screenplay_data,
+                    "mode": "critique",
+                }
+            )
             sound_issues = sound_feedback.get("critique_notes", [])
             if sound_issues:
-                self.state.add_message("Sound", f"Found {len(sound_issues)} emotional alignment issues")
+                self.state.add_message(
+                    "Sound", f"Found {len(sound_issues)} emotional alignment issues"
+                )
                 screenplay_data = self._apply_sound_feedback(screenplay_data, sound_issues)
             else:
                 self.state.add_message("Sound", "Emotional pacing looks good")
@@ -164,7 +194,9 @@ class DirectorAgent:
                 subject = note.get("subject")
                 scene_nums = note.get("scenes", [])
                 for scene in scenes:
-                    if scene.get("scene_number") in scene_nums and subject in scene.get("characters", []):
+                    if scene.get("scene_number") in scene_nums and subject in scene.get(
+                        "characters", []
+                    ):
                         scene["description"] += f" (maintain {subject} visual consistency)"
         return screenplay_data
 
@@ -185,9 +217,11 @@ class DirectorAgent:
         self.state.transition_to(ProductionPhase.PRE_PRODUCTION)
         self.state.add_message("Director", "=== PRE-PRODUCTION PHASE ===")
 
-        casting_data = self.casting.process({
-            "script": self.script.to_dict(),
-        })
+        casting_data = self.casting.process(
+            {
+                "script": self.script.to_dict(),
+            }
+        )
 
         character_prompts = casting_data.get("character_prompts", {})
         environment_prompts = casting_data.get("environment_prompts", {})
@@ -203,15 +237,21 @@ class DirectorAgent:
                             character_prompts[char_name],
                         )
 
-        sound_data = self.sound.process({
-            "script": self.script.to_dict(),
-        })
+        sound_data = self.sound.process(
+            {
+                "script": self.script.to_dict(),
+            }
+        )
 
         self.script.soundtrack = [
             SoundtrackSegment(
                 start_time=s["start_time"],
                 end_time=s["end_time"],
-                mood=EmotionalTone(s["mood"]) if isinstance(s["mood"], str) and s["mood"] in [e.value for e in EmotionalTone] else EmotionalTone.NEUTRAL,
+                mood=(
+                    EmotionalTone(s["mood"])
+                    if isinstance(s["mood"], str) and s["mood"] in [e.value for e in EmotionalTone]
+                    else EmotionalTone.NEUTRAL
+                ),
                 tempo=s["tempo"],
                 instruments=s["instruments"],
                 description=s["description"],
@@ -235,9 +275,11 @@ class DirectorAgent:
             self.state.add_message("Director", "Generating audio assets...")
             audio_result = self.sound.generate_audio_assets(self.script.to_dict())
             if audio_result.get("generated"):
-                self.state.add_message("Director",
+                self.state.add_message(
+                    "Director",
                     f"Audio generation complete: {len(audio_result.get('soundtrack', []))} tracks, "
-                    f"{len(audio_result.get('sound_cues', []))} cues")
+                    f"{len(audio_result.get('sound_cues', []))} cues",
+                )
 
         self.state.add_message("Director", "Pre-production complete")
 
@@ -268,20 +310,30 @@ class DirectorAgent:
         self.state.transition_to(ProductionPhase.POST_PRODUCTION)
         self.state.add_message("Director", "=== POST-PRODUCTION PHASE ===")
 
-        edit_data = self.editor.process({
-            "script": self.script.to_dict(),
-            "config": {
-                "fps": self.state.config.fps,
-                "resolution": self.state.config.resolution,
-                "output_dir": str(self.state.config.output_dir),
-            },
-        })
+        edit_data = self.editor.process(
+            {
+                "script": self.script.to_dict(),
+                "config": {
+                    "fps": self.state.config.fps,
+                    "resolution": self.state.config.resolution,
+                    "output_dir": str(self.state.config.output_dir),
+                },
+            }
+        )
 
         self.script.edit_decisions = [
             EditDecision(
                 shot_index=e["shot_index"],
-                transition_in=TransitionType(e["transition_in"]) if isinstance(e["transition_in"], str) else e["transition_in"],
-                transition_out=TransitionType(e["transition_out"]) if isinstance(e["transition_out"], str) else e["transition_out"],
+                transition_in=(
+                    TransitionType(e["transition_in"])
+                    if isinstance(e["transition_in"], str)
+                    else e["transition_in"]
+                ),
+                transition_out=(
+                    TransitionType(e["transition_out"])
+                    if isinstance(e["transition_out"], str)
+                    else e["transition_out"]
+                ),
                 transition_duration=e.get("transition_duration", 0.5),
                 speed_adjustment=e.get("speed_adjustment", 1.0),
                 color_grade=e.get("color_grade"),
@@ -303,8 +355,9 @@ class DirectorAgent:
 
     def _generate_shot_image(self, scene: Scene, shot: Shot) -> Path | None:
         """Generate image for a shot using configured image generation."""
-        self.state.add_message("Director",
-            f"Generating image: Scene {scene.scene_number}, Shot {shot.shot_number}")
+        self.state.add_message(
+            "Director", f"Generating image: Scene {scene.scene_number}, Shot {shot.shot_number}"
+        )
 
         if not self.state.config.enable_image_generation:
             return None
@@ -329,12 +382,14 @@ class DirectorAgent:
 
         try:
             import os
+
             api_key = os.getenv("OPENAI_API_KEY")
             if not api_key:
                 self.state.add_error("OPENAI_API_KEY not set")
                 return None
 
             from openai import OpenAI
+
             client = OpenAI(api_key=api_key)
 
             prompt = shot.visual_prompt
@@ -349,19 +404,19 @@ class DirectorAgent:
 
             image_url = response.data[0].url
             import urllib.request
+
             urllib.request.urlretrieve(image_url, image_path)
             self.log(f"  Image saved: {image_path}")
             return image_path
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - intentional broad catch for generation fallback
             self.state.add_error(f"Image generation failed: {e}")
             self.log(f"  Image generation failed: {e}")
             return None
 
     def _generate_shot_video(self, shot: Shot) -> Path | None:
         """Generate video clip for a shot using RunwayML text-to-video."""
-        self.state.add_message("Director",
-            f"Generating video: Shot {shot.shot_number}")
+        self.state.add_message("Director", f"Generating video: Shot {shot.shot_number}")
 
         if not self.state.config.enable_video_generation:
             return None
@@ -382,12 +437,14 @@ class DirectorAgent:
 
         try:
             import os
+
             api_key = os.getenv("RUNWAYML_API_SECRET")
             if not api_key:
                 self.state.add_error("RUNWAYML_API_SECRET not set")
                 return None
 
             from runwayml import RunwayML
+
             client = RunwayML(api_key=api_key)
 
             prompt_text = shot.visual_prompt or shot.description or f"Shot {shot.shot_number}"
@@ -404,19 +461,20 @@ class DirectorAgent:
                 duration=duration,
             ).wait_for_task_output()
 
-            if task and hasattr(task, 'output') and task.output:
-                video_url = task.output.url if hasattr(task.output, 'url') else task.output
+            if task and hasattr(task, "output") and task.output:
+                video_url = task.output.url if hasattr(task.output, "url") else task.output
                 if isinstance(video_url, list):
                     video_url = video_url[0]
                 import urllib.request
+
                 urllib.request.urlretrieve(video_url, video_path)
                 self.log(f"  Video saved: {video_path}")
                 return video_path
             else:
-                self.state.add_error(f"Video generation failed: no output")
+                self.state.add_error("Video generation failed: no output")
                 return None
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - intentional broad catch for generation fallback
             self.state.add_error(f"Video generation failed: {e}")
             self.log(f"  Video generation failed: {e}")
             return None

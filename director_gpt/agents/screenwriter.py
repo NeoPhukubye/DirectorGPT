@@ -11,7 +11,9 @@ class ScreenwriterAgent(BaseAgent):
     """Deconstructs prompts into scenes, character arcs, and shot-by-shot storyboards."""
 
     def get_role_description(self) -> str:
-        return "Transforms high-level prompts into detailed screenplays with shot-by-shot storyboards"
+        return (
+            "Transforms high-level prompts into detailed screenplays with shot-by-shot storyboards"
+        )
 
     def process(self, input_data: dict) -> dict:
         """Generate screenplay from prompt."""
@@ -29,7 +31,9 @@ class ScreenwriterAgent(BaseAgent):
         self.log(f"Created {len(characters)} characters")
 
         scenes = self._create_scenes(prompt, genre, target_duration, characters)
-        self.log(f"Created {len(scenes)} scenes with {sum(len(s['shots']) for s in scenes)} total shots")
+        self.log(
+            f"Created {len(scenes)} scenes with {sum(len(s['shots']) for s in scenes)} total shots"
+        )
 
         return {
             "characters": characters,
@@ -58,7 +62,7 @@ class ScreenwriterAgent(BaseAgent):
             data = json.loads(clean_json_text(response))
             if "characters" in data and "scenes" in data:
                 return data
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - intentional broad catch for LLM fallback
             self.log(f"LLM generation failed: {e}. Falling back to rule-based.")
 
         return self._fallback_generation(prompt, target_duration, genre)
@@ -85,31 +89,38 @@ class ScreenwriterAgent(BaseAgent):
         characters.append(protagonist)
 
         if "mystery" in prompt.lower() or "detective" in prompt.lower():
-            characters.append({
-                "name": "The Stranger",
-                "description": "A mysterious figure who appears at crucial moments",
-                "visual_prompt": "shadowy silhouette, noir lighting, fedora hat, trench coat",
-                "voice_description": "raspy whisper, deliberate pauses",
-            })
+            characters.append(
+                {
+                    "name": "The Stranger",
+                    "description": "A mysterious figure who appears at crucial moments",
+                    "visual_prompt": "shadowy silhouette, noir lighting, fedora hat, trench coat",
+                    "voice_description": "raspy whisper, deliberate pauses",
+                }
+            )
         elif "love" in prompt.lower() or "romance" in genre.lower():
-            characters.append({
-                "name": "Jordan",
-                "description": "The love interest, warm but guarded",
-                "visual_prompt": "soft focus, natural light, genuine smile",
-                "voice_description": "warm, melodic voice",
-            })
+            characters.append(
+                {
+                    "name": "Jordan",
+                    "description": "The love interest, warm but guarded",
+                    "visual_prompt": "soft focus, natural light, genuine smile",
+                    "voice_description": "warm, melodic voice",
+                }
+            )
         else:
-            characters.append({
-                "name": "Morgan",
-                "description": "A pragmatic ally with hidden depths",
-                "visual_prompt": "practical clothing, confident posture, sharp eyes",
-                "voice_description": "direct, clipped speech",
-            })
+            characters.append(
+                {
+                    "name": "Morgan",
+                    "description": "A pragmatic ally with hidden depths",
+                    "visual_prompt": "practical clothing, confident posture, sharp eyes",
+                    "voice_description": "direct, clipped speech",
+                }
+            )
 
         return characters
 
-    def _create_scenes(self, prompt: str, genre: str, target_duration: float,
-                       characters: list[dict]) -> list[dict]:
+    def _create_scenes(
+        self, prompt: str, genre: str, target_duration: float, characters: list[dict]
+    ) -> list[dict]:
         """Create scene breakdown with shots."""
         num_scenes = max(2, min(5, int(target_duration / 20)))
         scene_duration = target_duration / num_scenes
@@ -121,27 +132,27 @@ class ScreenwriterAgent(BaseAgent):
             beat = story_beats[i % len(story_beats)]
             scene_num = i + 1
 
-            shots = self._create_shots_for_scene(
-                scene_num, beat, scene_duration, characters
-            )
+            shots = self._create_shots_for_scene(scene_num, beat, scene_duration, characters)
 
-            scenes.append({
-                "scene_number": scene_num,
-                "title": f"Scene {scene_num}: {beat['title']}",
-                "location": beat["location"],
-                "time_of_day": beat["time_of_day"],
-                "description": beat["description"],
-                "emotional_tone": beat["emotional_tone"],
-                "characters": beat.get("characters", [c["name"] for c in characters[:2]]),
-                "environment_prompt": beat.get("environment_prompt"),
-                "shots": shots,
-            })
+            scenes.append(
+                {
+                    "scene_number": scene_num,
+                    "title": f"Scene {scene_num}: {beat['title']}",
+                    "location": beat["location"],
+                    "time_of_day": beat["time_of_day"],
+                    "description": beat["description"],
+                    "emotional_tone": beat["emotional_tone"],
+                    "characters": beat.get("characters", [c["name"] for c in characters[:2]]),
+                    "environment_prompt": beat.get("environment_prompt"),
+                    "shots": shots,
+                }
+            )
 
         return scenes
 
-    def _create_shots_for_scene(self, scene_num: int, beat: dict,
-                                 scene_duration: float,
-                                 characters: list[dict]) -> list[dict]:
+    def _create_shots_for_scene(
+        self, scene_num: int, beat: dict, scene_duration: float, characters: list[dict]
+    ) -> list[dict]:
         """Create detailed shots for a scene."""
         num_shots = max(3, min(6, int(scene_duration / 5)))
         shot_duration = scene_duration / num_shots
@@ -291,7 +302,12 @@ class ScreenwriterAgent(BaseAgent):
             "joyful": [ShotType.WIDE, ShotType.MEDIUM, ShotType.MEDIUM, ShotType.CLOSE_UP],
             "horror": [ShotType.WIDE, ShotType.MEDIUM, ShotType.EXTREME_CLOSE_UP, ShotType.POV],
             "serene": [ShotType.AERIAL, ShotType.WIDE, ShotType.WIDE, ShotType.MEDIUM],
-            "romantic": [ShotType.MEDIUM, ShotType.CLOSE_UP, ShotType.OVER_SHOULDER, ShotType.CLOSE_UP],
+            "romantic": [
+                ShotType.MEDIUM,
+                ShotType.CLOSE_UP,
+                ShotType.OVER_SHOULDER,
+                ShotType.CLOSE_UP,
+            ],
             "neutral": [ShotType.WIDE, ShotType.MEDIUM, ShotType.MEDIUM, ShotType.CLOSE_UP],
         }
         return sequences.get(emotional_tone, sequences["neutral"])
@@ -326,8 +342,9 @@ class ScreenwriterAgent(BaseAgent):
             return movements.get(shot_type)
         return "static"
 
-    def _generate_visual_prompt(self, shot_type: ShotType, beat: dict,
-                                 characters: list[dict]) -> str:
+    def _generate_visual_prompt(
+        self, shot_type: ShotType, beat: dict, characters: list[dict]
+    ) -> str:
         """Generate visual prompt for image generation."""
         base_prompt = beat.get("environment_prompt", "cinematic scene")
         shot_descriptors = {

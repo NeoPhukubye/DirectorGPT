@@ -3,14 +3,13 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass
 class LLMConfig:
     provider: str = "openai"
     model: str = "gpt-4"
-    api_key: Optional[str] = None
+    api_key: str | None = None
     temperature: float = 0.7
     max_tokens: int = 4096
 
@@ -18,7 +17,7 @@ class LLMConfig:
 @dataclass
 class ImageGenConfig:
     provider: str = "dall-e-3"
-    api_key: Optional[str] = None
+    api_key: str | None = None
     size: str = "1920x1080"
     quality: str = "hd"
 
@@ -26,15 +25,15 @@ class ImageGenConfig:
 @dataclass
 class AudioConfig:
     provider: str = "elevenlabs"
-    api_key: Optional[str] = None
-    voice_id: Optional[str] = None
+    api_key: str | None = None
+    voice_id: str | None = None
     sample_rate: int = 44100
 
 
 @dataclass
 class VideoConfig:
     provider: str = "runway"
-    api_key: Optional[str] = None
+    api_key: str | None = None
     fps: int = 24
     resolution: tuple[int, int] = (1920, 1080)
 
@@ -42,7 +41,7 @@ class VideoConfig:
 class Config:
     """Main configuration class."""
 
-    def __init__(self, config_path: Optional[Path] = None):
+    def __init__(self, config_path: Path | None = None):
         self.llm = LLMConfig()
         self.image_gen = ImageGenConfig()
         self.audio = AudioConfig()

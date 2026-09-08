@@ -36,8 +36,8 @@ class SoundDesignerAgent(BaseAgent):
         self.log(f"Created {len(sound_cues)} sound cues")
 
         return {
-            "soundtrack": [s.to_dict() if hasattr(s, 'to_dict') else s for s in soundtrack],
-            "sound_cues": [c.to_dict() if hasattr(c, 'to_dict') else c for c in sound_cues],
+            "soundtrack": [s.to_dict() if hasattr(s, "to_dict") else s for s in soundtrack],
+            "sound_cues": [c.to_dict() if hasattr(c, "to_dict") else c for c in sound_cues],
         }
 
     def generate_audio_assets(self, script: dict) -> dict:
@@ -56,6 +56,7 @@ class SoundDesignerAgent(BaseAgent):
             return {"generated": False, "error": "ELEVENLABS_API_KEY not set"}
 
         from elevenlabs.client import ElevenLabs
+
         client = ElevenLabs(api_key=api_key)
 
         soundtrack = script.get("soundtrack", [])
@@ -64,11 +65,13 @@ class SoundDesignerAgent(BaseAgent):
         generated_soundtrack = []
         for i, segment in enumerate(soundtrack):
             try:
-                audio_path = self._generate_audio_segment(client, segment, audio_dir, i, "soundtrack")
+                audio_path = self._generate_audio_segment(
+                    client, segment, audio_dir, i, "soundtrack"
+                )
                 if audio_path:
                     segment["generated_audio_path"] = str(audio_path)
                     generated_soundtrack.append(audio_path)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - intentional broad catch for audio generation
                 self.log(f"Soundtrack segment {i} generation failed: {e}")
 
         generated_cues = []
@@ -78,17 +81,21 @@ class SoundDesignerAgent(BaseAgent):
                 if audio_path:
                     cue["generated_audio_path"] = str(audio_path)
                     generated_cues.append(audio_path)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - intentional broad catch for audio generation
                 self.log(f"Sound cue {i} generation failed: {e}")
 
-        self.log(f"Generated {len(generated_soundtrack)} soundtrack segments, {len(generated_cues)} sound cues")
+        self.log(
+            f"Generated {len(generated_soundtrack)} soundtrack segments, {len(generated_cues)} sound cues"
+        )
         return {
             "generated": True,
             "soundtrack": generated_soundtrack,
             "sound_cues": generated_cues,
         }
 
-    def _generate_audio_segment(self, client, segment: dict, audio_dir: Path, index: int, segment_type: str) -> Path | None:
+    def _generate_audio_segment(
+        self, client, segment: dict, audio_dir: Path, index: int, segment_type: str
+    ) -> Path | None:
         """Generate a single audio segment using ElevenLabs."""
         description = segment.get("description", "")
         cue_type = segment.get("cue_type", "")
@@ -125,28 +132,36 @@ class SoundDesignerAgent(BaseAgent):
 
         for scene in scenes:
             emotional_tone = scene.get("emotional_tone", "neutral")
-            scene_duration = sum(shot.get("duration_seconds", 3.0) for shot in scene.get("shots", []))
+            scene_duration = sum(
+                shot.get("duration_seconds", 3.0) for shot in scene.get("shots", [])
+            )
 
             if scene_duration > 30 and emotional_tone in ["tense", "horror"]:
-                critique_notes.append({
-                    "type": "emotional_alignment",
-                    "scene_number": scene.get("scene_number"),
-                    "suggestion": f"Consider breaking up long {emotional_tone} scene to maintain tension",
-                })
+                critique_notes.append(
+                    {
+                        "type": "emotional_alignment",
+                        "scene_number": scene.get("scene_number"),
+                        "suggestion": f"Consider breaking up long {emotional_tone} scene to maintain tension",
+                    }
+                )
 
             if scene_duration < 5 and emotional_tone in ["romantic", "serene"]:
-                critique_notes.append({
-                    "type": "emotional_alignment",
-                    "scene_number": scene.get("scene_number"),
-                    "suggestion": f"Extend {emotional_tone} moment for emotional impact",
-                })
+                critique_notes.append(
+                    {
+                        "type": "emotional_alignment",
+                        "scene_number": scene.get("scene_number"),
+                        "suggestion": f"Extend {emotional_tone} moment for emotional impact",
+                    }
+                )
 
         if not critique_notes:
-            critique_notes.append({
-                "type": "emotional_alignment",
-                "scene_number": None,
-                "suggestion": "Emotional pacing looks balanced",
-            })
+            critique_notes.append(
+                {
+                    "type": "emotional_alignment",
+                    "scene_number": None,
+                    "suggestion": "Emotional pacing looks balanced",
+                }
+            )
 
         return {
             "critique_notes": critique_notes,
@@ -158,7 +173,9 @@ class SoundDesignerAgent(BaseAgent):
         current_time = 0.0
 
         for scene in scenes:
-            scene_duration = sum(shot.get("duration_seconds", 3.0) for shot in scene.get("shots", []))
+            scene_duration = sum(
+                shot.get("duration_seconds", 3.0) for shot in scene.get("shots", [])
+            )
             emotional_tone = scene.get("emotional_tone", "neutral")
 
             segments = self._create_segments_for_scene(
@@ -168,36 +185,45 @@ class SoundDesignerAgent(BaseAgent):
 
             current_time += scene_duration
 
-        return [s.to_dict() if hasattr(s, 'to_dict') else s for s in soundtrack]
+        return [s.to_dict() if hasattr(s, "to_dict") else s for s in soundtrack]
 
-    def _create_segments_for_scene(self, start_time: float, duration: float,
-                                    emotional_tone: str, scene: dict) -> list[SoundtrackSegment]:
+    def _create_segments_for_scene(
+        self, start_time: float, duration: float, emotional_tone: str, scene: dict
+    ) -> list[SoundtrackSegment]:
         """Create soundtrack segments for a scene."""
-        tone = EmotionalTone(emotional_tone) if emotional_tone in [e.value for e in EmotionalTone] else EmotionalTone.NEUTRAL
+        tone = (
+            EmotionalTone(emotional_tone)
+            if emotional_tone in [e.value for e in EmotionalTone]
+            else EmotionalTone.NEUTRAL
+        )
 
         mood_config = self._get_mood_config(tone)
 
         segments = []
 
         intro_duration = min(3.0, duration * 0.15)
-        segments.append(SoundtrackSegment(
-            start_time=start_time,
-            end_time=start_time + intro_duration,
-            mood=tone,
-            tempo=mood_config["tempo"],
-            instruments=mood_config["instruments"],
-            description=f"Intro: {mood_config['description']}",
-        ))
-
-        if duration > intro_duration:
-            segments.append(SoundtrackSegment(
-                start_time=start_time + intro_duration,
-                end_time=start_time + duration,
+        segments.append(
+            SoundtrackSegment(
+                start_time=start_time,
+                end_time=start_time + intro_duration,
                 mood=tone,
                 tempo=mood_config["tempo"],
                 instruments=mood_config["instruments"],
-                description=f"Main: {mood_config['description']}",
-            ))
+                description=f"Intro: {mood_config['description']}",
+            )
+        )
+
+        if duration > intro_duration:
+            segments.append(
+                SoundtrackSegment(
+                    start_time=start_time + intro_duration,
+                    end_time=start_time + duration,
+                    mood=tone,
+                    tempo=mood_config["tempo"],
+                    instruments=mood_config["instruments"],
+                    description=f"Main: {mood_config['description']}",
+                )
+            )
 
         return segments
 
@@ -226,7 +252,12 @@ class SoundDesignerAgent(BaseAgent):
             },
             EmotionalTone.HORROR: {
                 "tempo": "irregular, unsettling",
-                "instruments": ["dissonant strings", "prepared piano", "electronic drones", "found sounds"],
+                "instruments": [
+                    "dissonant strings",
+                    "prepared piano",
+                    "electronic drones",
+                    "found sounds",
+                ],
                 "description": "Atonal, unsettling soundscape with sudden stings",
             },
             EmotionalTone.TRIUMPHANT: {
@@ -266,10 +297,12 @@ class SoundDesignerAgent(BaseAgent):
             scene_cues = self._analyze_scene_for_cues(scene, current_time)
             cues.extend(scene_cues)
 
-            scene_duration = sum(shot.get("duration_seconds", 3.0) for shot in scene.get("shots", []))
+            scene_duration = sum(
+                shot.get("duration_seconds", 3.0) for shot in scene.get("shots", [])
+            )
             current_time += scene_duration
 
-        return [c.to_dict() if hasattr(c, 'to_dict') else c for c in cues]
+        return [c.to_dict() if hasattr(c, "to_dict") else c for c in cues]
 
     def _analyze_scene_for_cues(self, scene: dict, time_offset: float) -> list[SoundCue]:
         """Analyze a scene for required sound effects."""
@@ -303,7 +336,9 @@ class SoundDesignerAgent(BaseAgent):
 
         for key, (cue_type, description) in ambient_map.items():
             if key in location:
-                scene_duration = sum(shot.get("duration_seconds", 3.0) for shot in scene.get("shots", []))
+                scene_duration = sum(
+                    shot.get("duration_seconds", 3.0) for shot in scene.get("shots", [])
+                )
                 return SoundCue(
                     timestamp=time_offset,
                     duration=scene_duration,
@@ -321,39 +356,47 @@ class SoundDesignerAgent(BaseAgent):
         description = shot.get("description", "").lower()
 
         if "door" in description:
-            cues.append(SoundCue(
-                timestamp=time_offset + 0.5,
-                duration=1.0,
-                cue_type="foley",
-                description="Door handle turn and creak",
-                intensity=0.6,
-            ))
+            cues.append(
+                SoundCue(
+                    timestamp=time_offset + 0.5,
+                    duration=1.0,
+                    cue_type="foley",
+                    description="Door handle turn and creak",
+                    intensity=0.6,
+                )
+            )
 
         if "phone" in description or "call" in description:
-            cues.append(SoundCue(
-                timestamp=time_offset,
-                duration=2.0,
-                cue_type="foley",
-                description="Phone vibration and ring",
-                intensity=0.5,
-            ))
+            cues.append(
+                SoundCue(
+                    timestamp=time_offset,
+                    duration=2.0,
+                    cue_type="foley",
+                    description="Phone vibration and ring",
+                    intensity=0.5,
+                )
+            )
 
         if "rain" in location or "storm" in description:
-            cues.append(SoundCue(
-                timestamp=time_offset,
-                duration=shot.get("duration_seconds", 3.0),
-                cue_type="ambient",
-                description="Rain on surfaces, thunder distant",
-                intensity=0.4,
-            ))
+            cues.append(
+                SoundCue(
+                    timestamp=time_offset,
+                    duration=shot.get("duration_seconds", 3.0),
+                    cue_type="ambient",
+                    description="Rain on surfaces, thunder distant",
+                    intensity=0.4,
+                )
+            )
 
         if shot_type == "close_up" and shot.get("dialogue"):
-            cues.append(SoundCue(
-                timestamp=time_offset,
-                duration=shot.get("duration_seconds", 3.0),
-                cue_type="dialogue",
-                description=f"Dialogue: {shot['dialogue'][:50]}...",
-                intensity=0.8,
-            ))
+            cues.append(
+                SoundCue(
+                    timestamp=time_offset,
+                    duration=shot.get("duration_seconds", 3.0),
+                    cue_type="dialogue",
+                    description=f"Dialogue: {shot['dialogue'][:50]}...",
+                    intensity=0.8,
+                )
+            )
 
         return cues

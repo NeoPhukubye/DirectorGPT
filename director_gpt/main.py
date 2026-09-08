@@ -23,24 +23,28 @@ def create_parser() -> argparse.ArgumentParser:
         help="High-level film prompt or concept",
     )
     produce_parser.add_argument(
-        "--title", "-t",
+        "--title",
+        "-t",
         default="Untitled",
         help="Film title",
     )
     produce_parser.add_argument(
-        "--genre", "-g",
+        "--genre",
+        "-g",
         default="drama",
         choices=["drama", "horror", "comedy", "sci-fi", "romance", "thriller"],
         help="Film genre",
     )
     produce_parser.add_argument(
-        "--duration", "-d",
+        "--duration",
+        "-d",
         type=float,
         default=60.0,
         help="Target duration in seconds",
     )
     produce_parser.add_argument(
-        "--output", "-o",
+        "--output",
+        "-o",
         default="./output",
         help="Output directory",
     )
@@ -101,7 +105,7 @@ def cmd_produce(args):
     director = DirectorAgent(state)
 
     print(f"\n{'='*60}")
-    print(f"  DirectorGPT - Film Production Studio")
+    print("  DirectorGPT - Film Production Studio")
     print(f"{'='*60}")
     print(f"\n  Title: {args.title}")
     print(f"  Genre: {args.genre}")
@@ -109,7 +113,7 @@ def cmd_produce(args):
     print(f"  Output: {config.output_dir}")
     print(f"\n{'='*60}\n")
 
-    script = director.produce_film(
+    director.produce_film(
         prompt=args.prompt,
         title=args.title,
         genre=args.genre,
@@ -119,14 +123,14 @@ def cmd_produce(args):
     report = director.get_production_report()
 
     print(f"\n{'='*60}")
-    print(f"  Production Complete!")
+    print("  Production Complete!")
     print(f"{'='*60}")
     print(f"\n  Scenes: {report['scenes']}")
     print(f"  Total Shots: {report['total_shots']}")
     print(f"  Characters: {report['characters']}")
     print(f"  Estimated Duration: {report['estimated_duration']:.1f}s")
     print(f"  Sound Cues: {report['sound_cues']}")
-    print(f"\n  Output Files:")
+    print("\n  Output Files:")
     for name, path in state.artifacts.items():
         print(f"    - {name}: {path}")
     print(f"\n{'='*60}\n")
@@ -147,11 +151,13 @@ def cmd_script(args):
     state = ProjectState(config=config)
     screenwriter = ScreenwriterAgent("Screenwriter", state)
 
-    result = screenwriter.process({
-        "prompt": args.prompt,
-        "target_duration": args.duration,
-        "genre": args.genre,
-    })
+    result = screenwriter.process(
+        {
+            "prompt": args.prompt,
+            "target_duration": args.duration,
+            "genre": args.genre,
+        }
+    )
 
     output_path = config.output_dir / "script_only.json"
     output_path.write_text(json.dumps(result, indent=2))
@@ -172,7 +178,7 @@ def cmd_report(args):
     state = ProjectState.load_state(config)
 
     print(f"\n{'='*60}")
-    print(f"  Production Report")
+    print("  Production Report")
     print(f"{'='*60}")
     print(f"\n  Phase: {state.phase.value}")
     print(f"  Messages: {len(state.agent_messages)}")
@@ -180,7 +186,7 @@ def cmd_report(args):
     print(f"  Errors: {len(state.errors)}")
 
     if state.agent_messages:
-        print(f"\n  Recent Activity:")
+        print("\n  Recent Activity:")
         for msg in state.agent_messages[-10:]:
             print(f"    [{msg.get('phase', '?')}] {msg['agent']}: {msg['message'][:60]}")
 

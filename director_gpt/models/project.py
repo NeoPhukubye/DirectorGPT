@@ -1,10 +1,9 @@
 """Project state management for DirectorGPT."""
 
+import json
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Optional
-import json
 
 
 class ProductionPhase(Enum):
@@ -25,7 +24,7 @@ class ProjectConfig:
     enable_video_generation: bool = False
     enable_audio_generation: bool = False
     llm_model: str = "gpt-4"
-    temp_dir: Optional[Path] = None
+    temp_dir: Path | None = None
 
     def __post_init__(self):
         self.output_dir = Path(self.output_dir)
@@ -49,12 +48,14 @@ class ProjectState:
         self.phase = phase
 
     def add_message(self, agent: str, message: str, message_type: str = "info"):
-        self.agent_messages.append({
-            "agent": agent,
-            "message": message,
-            "type": message_type,
-            "phase": self.phase.value,
-        })
+        self.agent_messages.append(
+            {
+                "agent": agent,
+                "message": message,
+                "type": message_type,
+                "phase": self.phase.value,
+            }
+        )
 
     def add_artifact(self, name: str, path: Path):
         self.artifacts[name] = path

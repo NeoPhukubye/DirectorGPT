@@ -1,9 +1,9 @@
 """Base agent class with communication protocol."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any
 
 from director_gpt.models.project import ProjectState
 
@@ -52,15 +52,19 @@ class BaseAgent(ABC):
     @abstractmethod
     def process(self, input_data: dict) -> dict:
         """Main processing method for the agent."""
-        pass
 
     @abstractmethod
     def get_role_description(self) -> str:
         """Return description of this agent's role."""
-        pass
 
-    def send_message(self, recipient: str, message_type: MessageType,
-                     content: str, data: dict = None, requires_response: bool = False):
+    def send_message(
+        self,
+        recipient: str,
+        message_type: MessageType,
+        content: str,
+        data: dict | None = None,
+        requires_response: bool = False,
+    ):
         """Send a message to another agent."""
         msg = AgentMessage(
             sender=self.name,

@@ -1,6 +1,5 @@
 """Casting and Consistency agent for character continuity."""
 
-
 from director_gpt.agents import BaseAgent
 from director_gpt.models.project import ProjectState
 
@@ -9,7 +8,9 @@ class CastingAgent(BaseAgent):
     """Maintains character and environment visual embeddings across scenes."""
 
     def get_role_description(self) -> str:
-        return "Ensures visual consistency of characters and environments across all generated assets"
+        return (
+            "Ensures visual consistency of characters and environments across all generated assets"
+        )
 
     def __init__(self, name: str, state: ProjectState, llm_client=None):
         super().__init__(name, state, llm_client=llm_client)
@@ -50,20 +51,24 @@ class CastingAgent(BaseAgent):
 
         for char_name, scene_numbers in character_appearances.items():
             if len(scene_numbers) > 1:
-                critique_notes.append({
-                    "type": "character_continuity",
-                    "subject": char_name,
-                    "scenes": scene_numbers,
-                    "note": f"Ensure {char_name} appears visually consistent across scenes {scene_numbers}",
-                })
+                critique_notes.append(
+                    {
+                        "type": "character_continuity",
+                        "subject": char_name,
+                        "scenes": scene_numbers,
+                        "note": f"Ensure {char_name} appears visually consistent across scenes {scene_numbers}",
+                    }
+                )
 
         if not critique_notes:
-            critique_notes.append({
-                "type": "continuity_check",
-                "subject": "all",
-                "scenes": [s.get("scene_number") for s in scenes],
-                "note": "No major continuity issues detected",
-            })
+            critique_notes.append(
+                {
+                    "type": "continuity_check",
+                    "subject": "all",
+                    "scenes": [s.get("scene_number") for s in scenes],
+                    "note": "No major continuity issues detected",
+                }
+            )
 
         return {
             "critique_notes": critique_notes,
@@ -193,11 +198,13 @@ class CastingAgent(BaseAgent):
 
         for char_name, scene_numbers in character_appearances.items():
             if len(scene_numbers) > 1:
-                notes.append({
-                    "type": "character_continuity",
-                    "subject": char_name,
-                    "scenes": scene_numbers,
-                    "note": f"Ensure {char_name} appears visually consistent across scenes {scene_numbers}",
-                })
+                notes.append(
+                    {
+                        "type": "character_continuity",
+                        "subject": char_name,
+                        "scenes": scene_numbers,
+                        "note": f"Ensure {char_name} appears visually consistent across scenes {scene_numbers}",
+                    }
+                )
 
         return notes

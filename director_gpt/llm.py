@@ -1,6 +1,5 @@
 """LLM client abstraction supporting multiple providers."""
 
-from typing import Optional
 import os
 
 from director_gpt.utils.config import LLMConfig
@@ -22,9 +21,11 @@ class LLMClient:
 
         if self.provider == "openai":
             from openai import OpenAI
+
             self._client = OpenAI(api_key=self.api_key)
         elif self.provider == "gemini":
             import google.generativeai as genai
+
             genai.configure(api_key=self.api_key)
             self._client = genai.GenerativeModel(self.model)
         else:
@@ -32,7 +33,7 @@ class LLMClient:
 
         return self._client
 
-    def generate(self, prompt: str, system_prompt: Optional[str] = None) -> str:
+    def generate(self, prompt: str, system_prompt: str | None = None) -> str:
         client = self._get_client()
 
         if self.provider == "openai":
@@ -65,7 +66,7 @@ class LLMClient:
 
         raise ValueError(f"Unsupported provider: {self.provider}")
 
-    def chat(self, messages: list[dict], system_prompt: Optional[str] = None) -> str:
+    def chat(self, messages: list[dict], system_prompt: str | None = None) -> str:
         client = self._get_client()
 
         if self.provider == "openai":

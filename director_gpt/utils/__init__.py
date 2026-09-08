@@ -14,6 +14,7 @@ def get_output_dir(name: str) -> Path:
 def check_ffmpeg() -> bool:
     """Check if FFmpeg is available on the system."""
     import shutil
+
     return shutil.which("ffmpeg") is not None
 
 
@@ -53,8 +54,8 @@ def clean_json_text(raw: str) -> str:
     """Strip markdown code fences from LLM output before JSON parsing."""
     cleaned = raw.strip()
     if cleaned.startswith("```json"):
-        cleaned = cleaned[len("```json"):]
+        cleaned = cleaned[len("```json") :]
     elif cleaned.startswith("```"):
-        cleaned = cleaned[len("```"):]
+        cleaned = cleaned[len("```") :]
     cleaned = cleaned.removesuffix("```")
     return cleaned.strip()

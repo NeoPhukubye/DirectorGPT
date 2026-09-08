@@ -2,8 +2,6 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
-from datetime import timedelta
 
 
 class ShotType(Enum):
@@ -45,8 +43,8 @@ class Character:
     name: str
     description: str
     visual_prompt: str
-    voice_description: Optional[str] = None
-    consistency_embedding: Optional[str] = None
+    voice_description: str | None = None
+    consistency_embedding: str | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -64,14 +62,14 @@ class Shot:
     shot_type: ShotType
     description: str
     duration_seconds: float
-    dialogue: Optional[str] = None
-    action: Optional[str] = None
-    camera_movement: Optional[str] = None
-    visual_prompt: Optional[str] = None
+    dialogue: str | None = None
+    action: str | None = None
+    camera_movement: str | None = None
+    visual_prompt: str | None = None
     characters: list[str] = field(default_factory=list)
     emotional_tone: EmotionalTone = EmotionalTone.NEUTRAL
-    generated_image_path: Optional[str] = None
-    generated_video_path: Optional[str] = None
+    generated_image_path: str | None = None
+    generated_video_path: str | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -100,7 +98,7 @@ class Scene:
     emotional_tone: EmotionalTone
     shots: list[Shot] = field(default_factory=list)
     characters: list[str] = field(default_factory=list)
-    environment_prompt: Optional[str] = None
+    environment_prompt: str | None = None
 
     @property
     def total_duration(self) -> float:
@@ -127,7 +125,7 @@ class SoundCue:
     cue_type: str
     description: str
     intensity: float = 0.5
-    generated_audio_path: Optional[str] = None
+    generated_audio_path: str | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -148,7 +146,7 @@ class SoundtrackSegment:
     tempo: str
     instruments: list[str]
     description: str
-    generated_audio_path: Optional[str] = None
+    generated_audio_path: str | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -169,7 +167,7 @@ class EditDecision:
     transition_out: TransitionType
     transition_duration: float = 0.5
     speed_adjustment: float = 1.0
-    color_grade: Optional[str] = None
+    color_grade: str | None = None
 
     def to_dict(self) -> dict:
         return {

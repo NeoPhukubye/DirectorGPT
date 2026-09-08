@@ -64,8 +64,9 @@ class EditorAgent(BaseAgent):
 
         return decisions
 
-    def _determine_transitions(self, shot_position: int, total_shots: int,
-                                emotional_tone: str) -> tuple[TransitionType, TransitionType]:
+    def _determine_transitions(
+        self, shot_position: int, total_shots: int, emotional_tone: str
+    ) -> tuple[TransitionType, TransitionType]:
         """Determine appropriate transitions for a shot."""
         if shot_position == 0:
             transition_in = TransitionType.FADE_IN
@@ -126,21 +127,13 @@ class EditorAgent(BaseAgent):
         """Plan FFmpeg commands for assembly."""
         commands = []
 
-        commands.append(
-            "# Step 1: Prepare clips and build filter_complex"
-        )
+        commands.append("# Step 1: Prepare clips and build filter_complex")
 
-        commands.append(
-            "# Step 2: Concatenate with transitions and color grading"
-        )
+        commands.append("# Step 2: Concatenate with transitions and color grading")
 
-        commands.append(
-            "# Step 3: Mix audio tracks"
-        )
+        commands.append("# Step 3: Mix audio tracks")
 
-        commands.append(
-            "# Step 4: Final output"
-        )
+        commands.append("# Step 4: Final output")
 
         return commands
 
@@ -183,32 +176,36 @@ class EditorAgent(BaseAgent):
             for shot in scene.shots:
                 if shot.generated_video_path:
                     lines.append(
-                        f'# Shot {shot_index}: Scene {scene.scene_number}, Shot {shot.shot_number}'
+                        f"# Shot {shot_index}: Scene {scene.scene_number}, Shot {shot.shot_number}"
                     )
                     lines.append(
                         f'cp "{shot.generated_video_path}" "$TMPDIR/shot_{shot_index:04d}.mp4"'
                     )
                 shot_index += 1
 
-        lines.extend([
-            "",
-            "# Step 2: Create concat file",
-            'CONCAT_FILE="$TMPDIR/concat.txt"',
-            'echo "" > "$CONCAT_FILE"',
-        ])
+        lines.extend(
+            [
+                "",
+                "# Step 2: Create concat file",
+                'CONCAT_FILE="$TMPDIR/concat.txt"',
+                'echo "" > "$CONCAT_FILE"',
+            ]
+        )
 
         for i in range(shot_index):
             lines.append(f'echo "file \'shot_{i:04d}.mp4\'" >> "$CONCAT_FILE"')
 
-        lines.extend([
-            "",
-            "# Step 3: Concatenate with transitions",
-            'ffmpeg -f concat -safe 0 -i "$CONCAT_FILE" \\',
-            "  -c copy \\",
-            f'  -y "{output_dir / "final_cut.mp4"}"',
-            "",
-            "echo 'Assembly complete!'",
-        ])
+        lines.extend(
+            [
+                "",
+                "# Step 3: Concatenate with transitions",
+                'ffmpeg -f concat -safe 0 -i "$CONCAT_FILE" \\',
+                "  -c copy \\",
+                f'  -y "{output_dir / "final_cut.mp4"}"',
+                "",
+                "echo 'Assembly complete!'",
+            ]
+        )
 
         script_path.write_text("\n".join(lines))
         script_path.chmod(0o755)
@@ -266,28 +263,54 @@ class VideoRenderer:
 
             if video_path and os.path.exists(video_path):
                 cmd = [
-                    "ffmpeg", "-y", "-i", video_path,
-                    "-vf", filter_chain,
-                    "-t", str(duration),
-                    "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                    "ffmpeg",
+                    "-y",
+                    "-i",
+                    video_path,
+                    "-vf",
+                    filter_chain,
+                    "-t",
+                    str(duration),
+                    "-c:v",
+                    "libx264",
+                    "-pix_fmt",
+                    "yuv420p",
                     str(shot_out_path),
                 ]
             elif image_path and os.path.exists(image_path):
                 cmd = [
-                    "ffmpeg", "-y", "-loop", "1", "-i", image_path,
-                    "-vf", filter_chain,
-                    "-t", str(duration),
-                    "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                    "ffmpeg",
+                    "-y",
+                    "-loop",
+                    "1",
+                    "-i",
+                    image_path,
+                    "-vf",
+                    filter_chain,
+                    "-t",
+                    str(duration),
+                    "-c:v",
+                    "libx264",
+                    "-pix_fmt",
+                    "yuv420p",
                     str(shot_out_path),
                 ]
             else:
                 shot_desc = shot.get("description", f"Shot {idx + 1}")
                 text_filter = f"drawtext=text='{shot_desc}':fontcolor=white:fontsize=24:x=(w-text_w)/2:y=(h-text_h)/2"
                 cmd = [
-                    "ffmpeg", "-y", "-f", "lavfi", "-i",
+                    "ffmpeg",
+                    "-y",
+                    "-f",
+                    "lavfi",
+                    "-i",
                     f"color=c=black:s=1920x1080:d={duration}",
-                    "-vf", f"{filter_chain},{text_filter}",
-                    "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                    "-vf",
+                    f"{filter_chain},{text_filter}",
+                    "-c:v",
+                    "libx264",
+                    "-pix_fmt",
+                    "yuv420p",
                     str(shot_out_path),
                 ]
 
@@ -300,9 +323,16 @@ class VideoRenderer:
 
         raw_stitched_video = self.output_dir / "video_assembled.mp4"
         concat_cmd = [
-            "ffmpeg", "-y", "-f", "concat", "-safe", "0",
-            "-i", str(concat_list_path),
-            "-c", "copy",
+            "ffmpeg",
+            "-y",
+            "-f",
+            "concat",
+            "-safe",
+            "0",
+            "-i",
+            str(concat_list_path),
+            "-c",
+            "copy",
             str(raw_stitched_video),
         ]
         subprocess.run(concat_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
@@ -325,17 +355,29 @@ class VideoRenderer:
             filter_inputs = "".join(f"[{i}:a]" for i in range(1, num_audio + 1))
             filter_str = f"{filter_inputs}amix=inputs={num_audio}:duration=longest:dropout_transition=0[aout]"
 
-            mix_cmd = [
-                "ffmpeg", "-y",
-            ] + input_args + [
-                "-filter_complex", filter_str,
-                "-map", "0:v",
-                "-map", "[aout]",
-                "-c:v", "copy",
-                "-c:a", "aac", "-b:a", "192k",
-                "-shortest",
-                str(final_mp4),
-            ]
+            mix_cmd = (
+                [
+                    "ffmpeg",
+                    "-y",
+                ]
+                + input_args
+                + [
+                    "-filter_complex",
+                    filter_str,
+                    "-map",
+                    "0:v",
+                    "-map",
+                    "[aout]",
+                    "-c:v",
+                    "copy",
+                    "-c:a",
+                    "aac",
+                    "-b:a",
+                    "192k",
+                    "-shortest",
+                    str(final_mp4),
+                ]
+            )
             subprocess.run(mix_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         else:
             raw_stitched_video.rename(final_mp4)

@@ -316,36 +316,27 @@ class VideoRenderer:
                 audio_inputs.append(stem_path)
 
         if audio_inputs:
-            # Concatenate all audio stems into one timeline-matched track
-            audio_concat_path = self.output_dir / "audio_concat.mp3"
-            if len(audio_inputs) == 1:
-                concat_audio_cmd = [
-                    "ffmpeg", "-y", "-i", audio_inputs[0],
-                    "-c:a", "libmp3lame", "-b:a", "192k",
-                    str(audio_concat_path),
-                ]
-            else:
-                filter_str = "".join(f"[{i}:a]" for i in range(len(audio_inputs)))
-                concat_audio_cmd = [
-                    "ffmpeg", "-y",
-                ] + [item for pair in zip([f"-i" for _ in audio_inputs], audio_inputs) for item in pair] + [
-                    "-filter_complex", f"{filter_str}concat=n={len(audio_inputs)}:v=0:a=1[aout]",
-                    "-map", "[aout]",
-                    "-c:a", "libmp3lame", "-b:a", "192k",
-                    str(audio_concat_path),
-                ]
-            subprocess.run(concat_audio_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+            # Mix all audio stems into a single track using the amix filter
+            input_args = ["-i", str(raw_stitched_video)]
+            for path in audio_inputs:
+                input_args.extend(["-i", path])
+
+            num_audio = len(audio_inputs)
+            filter_inputs = "".join(f"[{i}:a]" for i in range(1, num_audio + 1))
+            filter_str = f"{filter_inputs}amix=inputs={num_audio}:duration=longest:dropout_transition=0[aout]"
 
             mix_cmd = [
-                "ffmpeg", "-y", "-i", str(raw_stitched_video),
-                "-i", str(audio_concat_path),
-                "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+                "ffmpeg", "-y",
+            ] + input_args + [
+                "-filter_complex", filter_str,
+                "-map", "0:v",
+                "-map", "[aout]",
+                "-c:v", "copy",
+                "-c:a", "aac", "-b:a", "192k",
                 "-shortest",
                 str(final_mp4),
             ]
             subprocess.run(mix_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-            if audio_concat_path.exists():
-                audio_concat_path.unlink()
         else:
             raw_stitched_video.rename(final_mp4)
 

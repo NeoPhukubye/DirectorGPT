@@ -291,7 +291,7 @@ class VideoRenderer:
                     str(shot_out_path),
                 ]
 
-            subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
             clip_files.append(shot_out_path)
 
         concat_list_path = self.output_dir / "concat_list.txt"
@@ -305,7 +305,7 @@ class VideoRenderer:
             "-c", "copy",
             str(raw_stitched_video),
         ]
-        subprocess.run(concat_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(concat_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
 
         final_mp4 = self.output_dir / f"{project_name}_final_cut.mp4"
 
@@ -316,14 +316,36 @@ class VideoRenderer:
                 audio_inputs.append(stem_path)
 
         if audio_inputs:
+            # Concatenate all audio stems into one timeline-matched track
+            audio_concat_path = self.output_dir / "audio_concat.mp3"
+            if len(audio_inputs) == 1:
+                concat_audio_cmd = [
+                    "ffmpeg", "-y", "-i", audio_inputs[0],
+                    "-c:a", "libmp3lame", "-b:a", "192k",
+                    str(audio_concat_path),
+                ]
+            else:
+                filter_str = "".join(f"[{i}:a]" for i in range(len(audio_inputs)))
+                concat_audio_cmd = [
+                    "ffmpeg", "-y",
+                ] + [item for pair in zip([f"-i" for _ in audio_inputs], audio_inputs) for item in pair] + [
+                    "-filter_complex", f"{filter_str}concat=n={len(audio_inputs)}:v=0:a=1[aout]",
+                    "-map", "[aout]",
+                    "-c:a", "libmp3lame", "-b:a", "192k",
+                    str(audio_concat_path),
+                ]
+            subprocess.run(concat_audio_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+
             mix_cmd = [
                 "ffmpeg", "-y", "-i", str(raw_stitched_video),
-                "-i", audio_inputs[0],
+                "-i", str(audio_concat_path),
                 "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
                 "-shortest",
                 str(final_mp4),
             ]
-            subprocess.run(mix_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(mix_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+            if audio_concat_path.exists():
+                audio_concat_path.unlink()
         else:
             raw_stitched_video.rename(final_mp4)
 

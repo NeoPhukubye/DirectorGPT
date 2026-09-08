@@ -135,8 +135,50 @@ pip install -e ".[dev]"
 pytest
 
 # Format code
-black director_gpt/
-ruff check director_gpt/
+black director_gpt/ tests/
+ruff check director_gpt/ tests/
+
+# Type check
+mypy director_gpt/
+```
+
+## Media Generation
+
+DirectorGPT supports optional AI-powered media generation:
+
+- **Image Generation** (`--enable-images`): Uses DALL-E 3 to generate storyboard frames
+- **Video Generation** (`--enable-video`): Uses RunwayML Gen-4 to generate video clips
+- **Audio Generation** (`--enable-audio`): Uses ElevenLabs for soundtrack and sound effects
+
+Set the following environment variables:
+- `OPENAI_API_KEY` - For DALL-E image generation
+- `RUNWAYML_API_SECRET` - For RunwayML video generation
+- `ELEVENLABS_API_KEY` - For ElevenLabs audio generation
+
+## Configuration
+
+Create a `config.json` for API keys and generation settings:
+
+```json
+{
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-4",
+    "api_key": "sk-..."
+  },
+  "image_gen": {
+    "provider": "dall-e-3",
+    "size": "1920x1080"
+  },
+  "audio": {
+    "provider": "elevenlabs",
+    "api_key": "..."
+  },
+  "video": {
+    "provider": "runway",
+    "api_key": "..."
+  }
+}
 ```
 
 ## License

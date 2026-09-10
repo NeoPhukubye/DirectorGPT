@@ -15,55 +15,66 @@ function initEnchantedReveal() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const particles = [];
-    const colors = ['#f472b6', '#fbcfe8', '#e9d5ff', '#c084fc', '#ffffff', '#fb7185'];
+    const curtain = document.getElementById('enchantedCurtain');
+    const container = document.querySelector('.container.transform-reveal');
 
-    for (let i = 0; i < 90; i++) {
-        particles.push({
-            x: window.innerWidth / 2,
-            y: window.innerHeight / 2,
-            vx: (Math.random() - 0.5) * 14,
-            vy: (Math.random() - 0.5) * 14,
-            radius: Math.random() * 4 + 1.5,
-            color: colors[Math.floor(Math.random() * colors.length)],
-            alpha: 1,
-            decay: Math.random() * 0.015 + 0.005
-        });
-    }
+    let started = false;
 
     function animateSparkles() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach((p) => {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.alpha -= p.decay;
-            if (p.alpha > 0) {
-                ctx.save();
-                ctx.globalAlpha = p.alpha;
-                ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
-        });
-        if (particles.some(p => p.alpha > 0)) {
-            requestAnimationFrame(animateSparkles);
+        const particles = [];
+        const colors = ['#f472b6', '#fbcfe8', '#e9d5ff', '#c084fc', '#ffffff', '#fb7185'];
+
+        for (let i = 0; i < 90; i++) {
+            particles.push({
+                x: window.innerWidth / 2,
+                y: window.innerHeight / 2,
+                vx: (Math.random() - 0.5) * 14,
+                vy: (Math.random() - 0.5) * 14,
+                radius: Math.random() * 4 + 1.5,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                alpha: 1,
+                decay: Math.random() * 0.015 + 0.005
+            });
         }
+
+        function frame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= p.decay;
+                if (p.alpha > 0) {
+                    ctx.save();
+                    ctx.globalAlpha = p.alpha;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            });
+            if (particles.some(p => p.alpha > 0)) {
+                requestAnimationFrame(frame);
+            }
+        }
+        frame();
     }
 
-    setTimeout(() => {
+    function reveal() {
+        if (started) return;
+        started = true;
         animateSparkles();
-        const curtain = document.getElementById('enchantedCurtain');
-        const container = document.querySelector('.container.transform-reveal');
-
         if (curtain) curtain.classList.add('dissolve');
         if (container) container.classList.add('revealed');
 
         setTimeout(() => {
             if (curtain) curtain.style.display = 'none';
         }, 1200);
-    }, 1800);
+    }
+
+    if (curtain) {
+        curtain.addEventListener('click', reveal);
+    }
 }
 
 function createFloatingPetals() {

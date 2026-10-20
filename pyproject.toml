@@ -38,15 +38,18 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
+    "pytest-cov>=4.0",
     "black",
     "ruff",
     "mypy",
+    "pre-commit",
 ]
 image = [
     "openai>=1.0",
 ]
 audio = [
     "openai>=1.0",
+    "elevenlabs>=0.1.0",
 ]
 video = [
     "runwayml",
@@ -56,12 +59,14 @@ video = [
 directorgpt = "director_gpt.main:main"
 
 [project.urls]
-Homepage = "https://github.com/directorgpt/directorgpt"
-Documentation = "https://directorgpt.readthedocs.io"
+Homepage = "https://github.com/NeoPhukubye/DirectorGPT"
+Documentation = "https://github.com/NeoPhukubye/DirectorGPT"
+Repository = "https://github.com/NeoPhukubye/DirectorGPT"
+Issues = "https://github.com/NeoPhukubye/DirectorGPT/issues"
 
 [tool.setuptools.packages.find]
 include = ["director_gpt*"]
-exclude = ["tests*"]
+exclude = ["tests*", "api*", "frontend*", "examples*"]
 
 [tool.black]
 line-length = 100
@@ -71,7 +76,36 @@ target-version = ["py310"]
 line-length = 100
 target-version = "py310"
 
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long (handled by black)
+    "B008",  # function calls in default arguments
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]
+
 [tool.mypy]
 python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v"
+
+[tool.coverage.run]
+source = ["director_gpt"]
+omit = ["*/tests/*", "*/__pycache__/*"]

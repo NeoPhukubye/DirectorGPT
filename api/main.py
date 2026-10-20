@@ -1,16 +1,17 @@
 """FastAPI backend for DirectorGPT web deployment."""
 
-import os
 import json
+import os
 import tempfile
 from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from director_gpt.director import DirectorAgent
-from director_gpt.models.project import ProjectConfig, ProjectState
 from director_gpt.llm import LLMClient
+from director_gpt.models.project import ProjectConfig, ProjectState
 from director_gpt.utils.config import LLMConfig
 
 app = FastAPI(
@@ -46,6 +47,20 @@ class ProduceRequest(BaseModel):
     llm_model: str = "gemini-2.0-flash"
     llm_api_key: str | None = None
 
+    @field_validator("duration")
+    @classmethod
+    def _validate_duration(cls, value: float) -> float:
+        if value <= 0:
+            raise ValueError("duration must be positive")
+        return value
+
+    @field_validator("fps")
+    @classmethod
+    def _validate_fps(cls, value: int) -> int:
+        if value <= 0:
+            raise ValueError("fps must be positive")
+        return value
+
 
 class ScriptRequest(BaseModel):
     prompt: str
@@ -54,6 +69,23 @@ class ScriptRequest(BaseModel):
     llm_provider: str = "gemini"
     llm_model: str = "gemini-2.0-flash"
     llm_api_key: str | None = None
+
+    @field_validator("duration")
+    @classmethod
+    def _validate_duration(cls, value: float) -> float:
+        if value <= 0:
+            raise ValueError("duration must be positive")
+        return value
+
+
+def _parse_resolution(resolution: str) -> tuple[int, int]:
+    try:
+        width, height = resolution.split("x")
+        return int(width), int(height)
+    except (ValueError, AttributeError) as exc:
+        raise HTTPException(
+            status_code=422, detail=f"Invalid resolution '{resolution}', expected WxH"
+        ) from exc
 
 
 @app.get("/api/health")
@@ -64,7 +96,7 @@ async def health():
 @app.post("/api/produce")
 async def produce(req: ProduceRequest):
     try:
-        width, height = map(int, req.resolution.split("x"))
+        width, height = _parse_resolution(req.resolution)
         api_key = req.llm_api_key or os.getenv("GEMINI_API_KEY")
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -97,7 +129,11 @@ async def produce(req: ProduceRequest):
 
             report = director.get_production_report()
             script_path = config.output_dir / "script.json"
-            script_data = json.loads(script_path.read_text()) if script_path.exists() else script.to_dict()
+            script_data = (
+                json.loads(script_path.read_text())
+                if script_path.exists()
+                else script.to_dict()
+            )
 
             return {
                 "success": True,
@@ -105,6 +141,8 @@ async def produce(req: ProduceRequest):
                 "report": report,
             }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -113,6 +151,7 @@ async def produce(req: ProduceRequest):
 async def generate_script(req: ScriptRequest):
     try:
         from director_gpt.agents.screenwriter import ScreenwriterAgent
+
         api_key = req.llm_api_key or os.getenv("GEMINI_API_KEY")
 
         llm_config = LLMConfig(
@@ -128,18 +167,24 @@ async def generate_script(req: ScriptRequest):
                 output_dir=Path(tmpdir),
             )
             state = ProjectState(config=config)
-            screenwriter = ScreenwriterAgent("Screenwriter", state, llm_client=llm_client)
+            screenwriter = ScreenwriterAgent(
+                "Screenwriter", state, llm_client=llm_client
+            )
 
-            result = screenwriter.process({
-                "prompt": req.prompt,
-                "target_duration": req.duration,
-                "genre": req.genre,
-            })
+            result = screenwriter.process(
+                {
+                    "prompt": req.prompt,
+                    "target_duration": req.duration,
+                    "genre": req.genre,
+                }
+            )
 
             return {
                 "success": True,
                 "script": result,
             }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

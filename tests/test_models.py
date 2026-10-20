@@ -2,6 +2,7 @@
 
 from director_gpt.models import (
     Character,
+    EditDecision,
     EmotionalTone,
     FilmScript,
     Scene,
@@ -135,3 +136,109 @@ def test_film_script_to_dict():
     assert d["genre"] == "drama"
     assert d["characters"] == []
     assert d["scenes"] == []
+
+
+def test_shot_from_dict_defaults():
+    shot = Shot.from_dict(
+        {
+            "shot_number": 2,
+            "shot_type": "wide",
+            "description": "Test",
+            "duration_seconds": 7.5,
+            "emotional_tone": "tense",
+        }
+    )
+    assert shot.shot_number == 2
+    assert shot.shot_type == ShotType.WIDE
+    assert shot.duration_seconds == 7.5
+    assert shot.emotional_tone == EmotionalTone.TENSE
+
+
+def test_shot_from_dict_invalid_enum_defaults():
+    shot = Shot.from_dict(
+        {"shot_type": "not_a_real_type", "emotional_tone": "bogus"}
+    )
+    assert shot.shot_type == ShotType.MEDIUM
+    assert shot.emotional_tone == EmotionalTone.NEUTRAL
+
+
+def test_shot_roundtrip():
+    original = Shot(
+        shot_number=1,
+        shot_type=ShotType.CLOSE_UP,
+        description="Round trip",
+        duration_seconds=4.0,
+        emotional_tone=EmotionalTone.JOYFUL,
+    )
+    restored = Shot.from_dict(original.to_dict())
+    assert restored == original
+
+
+def test_scene_from_dict_with_shots():
+    data = {
+        "scene_number": 1,
+        "title": "Test",
+        "location": "loc",
+        "time_of_day": "day",
+        "description": "desc",
+        "emotional_tone": "neutral",
+        "shots": [
+            {
+                "shot_number": 1,
+                "shot_type": "medium",
+                "description": "s1",
+                "duration_seconds": 3.0,
+            }
+        ],
+    }
+    scene = Scene.from_dict(data)
+    assert scene.scene_number == 1
+    assert len(scene.shots) == 1
+    assert scene.shots[0].shot_type == ShotType.MEDIUM
+
+
+def test_film_script_from_dict():
+    data = {
+        "title": "Loaded Film",
+        "logline": "From dict",
+        "genre": "comedy",
+        "total_duration_estimate": 30.0,
+        "characters": [
+            {"name": "Sam", "description": "Protagonist", "visual_prompt": "heroic"}
+        ],
+        "scenes": [
+            {
+                "scene_number": 1,
+                "title": "S1",
+                "location": "office",
+                "time_of_day": "morning",
+                "description": "Opening",
+                "emotional_tone": "joyful",
+                "shots": [],
+            }
+        ],
+    }
+    script = FilmScript.from_dict(data)
+    assert script.title == "Loaded Film"
+    assert script.genre == "comedy"
+    assert len(script.characters) == 1
+    assert script.characters[0].name == "Sam"
+    assert len(script.scenes) == 1
+    assert script.scenes[0].emotional_tone == EmotionalTone.JOYFUL
+
+
+def test_edit_decision_from_dict():
+    data = {
+        "shot_index": 3,
+        "transition_in": "fade_in",
+        "transition_out": "dissolve",
+        "transition_duration": 0.7,
+        "speed_adjustment": 1.1,
+        "color_grade": "warm",
+    }
+    decision = EditDecision.from_dict(data)
+    assert decision.shot_index == 3
+    assert decision.transition_in == TransitionType.FADE_IN
+    assert decision.transition_out == TransitionType.DISSOLVE
+    assert decision.speed_adjustment == 1.1
+    assert decision.color_grade == "warm"

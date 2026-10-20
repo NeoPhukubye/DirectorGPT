@@ -87,9 +87,20 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _parse_resolution(resolution: str) -> tuple[int, int]:
+    """Parse a WxH resolution string into a tuple of ints."""
+    try:
+        width, height = resolution.split("x")
+        return int(width), int(height)
+    except (ValueError, AttributeError) as exc:
+        raise argparse.ArgumentTypeError(
+            f"Invalid resolution '{resolution}', expected WxH (e.g. 1920x1080)"
+        ) from exc
+
+
 def cmd_produce(args):
     """Execute film production pipeline."""
-    width, height = map(int, args.resolution.split("x"))
+    width, height = _parse_resolution(args.resolution)
 
     config = ProjectConfig(
         project_name=args.title,
@@ -211,7 +222,14 @@ def main():
 
     handler = commands.get(args.command)
     if handler:
-        return handler(args)
+        try:
+            return handler(args)
+        except KeyboardInterrupt:
+            print("\n\nOperation cancelled by user.")
+            return 130
+        except Exception as exc:  # noqa: BLE001 - top-level CLI guard
+            print(f"\nError: {exc}", file=sys.stderr)
+            return 1
 
     parser.print_help()
     return 1

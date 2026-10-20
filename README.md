@@ -28,7 +28,7 @@ DirectorGPT
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/DirectorGPT.git
+git clone https://github.com/Kilo-Org/DirectorGPT.git
 cd DirectorGPT
 
 # Install with pip
@@ -125,6 +125,32 @@ Create a `config.json` for API keys and generation settings:
 }
 ```
 
+## Configuration
+
+Create a `config.json` for API keys and generation settings:
+
+```json
+{
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-4",
+    "api_key": "sk-..."
+  },
+  "image_gen": {
+    "provider": "dall-e-3",
+    "size": "1920x1080"
+  },
+  "audio": {
+    "provider": "elevenlabs",
+    "api_key": "..."
+  },
+  "video": {
+    "provider": "runway",
+    "api_key": "..."
+  }
+}
+```
+
 ## Development
 
 ```bash
@@ -154,32 +180,6 @@ Set the following environment variables:
 - `OPENAI_API_KEY` - For DALL-E image generation
 - `RUNWAYML_API_SECRET` - For RunwayML video generation
 - `ELEVENLABS_API_KEY` - For ElevenLabs audio generation
-
-## Configuration
-
-Create a `config.json` for API keys and generation settings:
-
-```json
-{
-  "llm": {
-    "provider": "openai",
-    "model": "gpt-4",
-    "api_key": "sk-..."
-  },
-  "image_gen": {
-    "provider": "dall-e-3",
-    "size": "1920x1080"
-  },
-  "audio": {
-    "provider": "elevenlabs",
-    "api_key": "..."
-  },
-  "video": {
-    "provider": "runway",
-    "api_key": "..."
-  }
-}
-```
 
 ## License
 

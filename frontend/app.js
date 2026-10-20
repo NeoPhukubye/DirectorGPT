@@ -1,6 +1,9 @@
-const API_BASE = window.location.hostname === 'localhost'
-    ? 'http://localhost:8000'
-    : 'https://directorgpt.onrender.com';
+const API_BASE = (window.DIRECTORGPT_API_BASE)
+    || (window.location.hostname === 'localhost'
+        ? 'http://localhost:8000'
+        : 'https://directorgpt.onrender.com');
+
+const REQUEST_TIMEOUT_MS = 300000; // 5 minutes for long-running productions
 
 const generateBtn = document.getElementById('generateBtn');
 const scriptBtn = document.getElementById('scriptBtn');

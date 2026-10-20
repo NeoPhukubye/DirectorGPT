@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 from director_gpt.agents import BaseAgent
-from director_gpt.models import EmotionalTone, SoundCue, SoundtrackSegment, parse_emotional_tone
+from director_gpt.models import EmotionalTone, SoundCue, SoundtrackSegment
 from director_gpt.models.project import ProjectState
 from director_gpt.utils import safe_import
 
@@ -334,7 +334,7 @@ class SoundDesignerAgent(BaseAgent):
             "rooftop": ("rooftop ambience", "wind, distant city, pigeons"),
         }
 
-        for key, (cue_type, description) in ambient_map.items():
+        for key, (_cue_type, description) in ambient_map.items():
             if key in location:
                 scene_duration = sum(
                     shot.get("duration_seconds", 3.0) for shot in scene.get("shots", [])

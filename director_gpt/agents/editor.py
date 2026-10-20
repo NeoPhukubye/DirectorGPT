@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from director_gpt.agents import BaseAgent
-from director_gpt.models import EditDecision, TransitionType, parse_transition_type
+from director_gpt.models import EditDecision, TransitionType
 from director_gpt.models.project import ProjectState
 
 
@@ -46,7 +46,7 @@ class EditorAgent(BaseAgent):
             shots = scene.get("shots", [])
             emotional_tone = scene.get("emotional_tone", "neutral")
 
-            for i, shot in enumerate(shots):
+            for i, _shot in enumerate(shots):
                 transition_in, transition_out = self._determine_transitions(
                     i, len(shots), emotional_tone
                 )

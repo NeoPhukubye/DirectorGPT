@@ -1,6 +1,8 @@
 """Utility functions and configuration helpers."""
 
 import os
+import re
+import shutil
 from pathlib import Path
 
 
@@ -13,8 +15,6 @@ def get_output_dir(name: str) -> Path:
 
 def check_ffmpeg() -> bool:
     """Check if FFmpeg is available on the system."""
-    import shutil
-
     return shutil.which("ffmpeg") is not None
 
 
@@ -59,3 +59,64 @@ def clean_json_text(raw: str) -> str:
         cleaned = cleaned[len("```") :]
     cleaned = cleaned.removesuffix("```")
     return cleaned.strip()
+
+
+def extract_json_from_text(text: str) -> str | None:
+    """Extract the first JSON object found in a text string.
+
+    Returns the JSON substring or None if no valid JSON braces are found.
+    """
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end == -1 or end < start:
+        return None
+    return text[start : end + 1]
+
+
+def parse_llm_json(text: str) -> dict | None:
+    """Parse JSON from LLM output, handling code fences and embedded text.
+
+    Falls back to brace-matching extraction if direct parsing fails.
+    """
+    import json
+
+    candidates = [clean_json_text(text), extract_json_from_text(text)]
+    for candidate in candidates:
+        if not candidate:
+            continue
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+    return None
+
+
+def clamp(value: float, low: float, high: float) -> float:
+    """Clamp a numeric value to a range."""
+    return max(low, min(value, high))
+
+
+def slugify(text: str) -> str:
+    """Convert text to a URL-friendly slug."""
+    slug = re.sub(r"[^a-zA-Z0-9]+", "-", text.strip().lower())
+    return slug.strip("-")
+
+
+def ensure_dir(path: str | Path) -> Path:
+    """Ensure a directory exists, creating it if necessary."""
+    dir_path = Path(path)
+    dir_path.mkdir(parents=True, exist_ok=True)
+    return dir_path
+
+
+def get_api_key(provider: str) -> str | None:
+    """Get API key for a provider from environment variables.
+
+    Supports both ``<PROVIDER>_API_KEY`` and ``<PROVIDER>_API_SECRET``.
+    """
+    provider = provider.lower()
+    for suffix in ("API_KEY", "API_SECRET"):
+        key = os.environ.get(f"{provider.upper()}_{suffix}")
+        if key:
+            return key
+    return None

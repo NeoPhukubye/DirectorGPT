@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 from director_gpt.agents import BaseAgent
-from director_gpt.models import EmotionalTone, SoundCue, SoundtrackSegment
+from director_gpt.models import EmotionalTone, SoundCue, SoundtrackSegment, parse_emotional_tone
 from director_gpt.models.project import ProjectState
 from director_gpt.utils import safe_import
 

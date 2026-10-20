@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from director_gpt.agents import BaseAgent
-from director_gpt.models import EditDecision, TransitionType
+from director_gpt.models import EditDecision, TransitionType, parse_transition_type
 from director_gpt.models.project import ProjectState
 
 
@@ -253,9 +253,9 @@ class VideoRenderer:
             filters = [
                 "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2"
             ]
-            if trans_in == "fade_in":
+            if trans_in == TransitionType.FADE_IN:
                 filters.append(f"fade=t=in:st=0:d={trans_dur}")
-            if trans_out == "fade_out":
+            if trans_out == TransitionType.FADE_OUT:
                 start_fade = max(0.0, float(duration) - float(trans_dur))
                 filters.append(f"fade=t=out:st={start_fade}:d={trans_dur}")
 

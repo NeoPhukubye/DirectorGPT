@@ -1,10 +1,8 @@
 """Screenwriter agent for script generation and storyboarding."""
 
-import json
-
 from director_gpt.agents import BaseAgent
 from director_gpt.models import ShotType
-from director_gpt.utils import clean_json_text
+from director_gpt.utils import parse_llm_json
 
 
 class ScreenwriterAgent(BaseAgent):
@@ -59,8 +57,8 @@ class ScreenwriterAgent(BaseAgent):
 
         try:
             response = self.llm_client.generate(user_prompt, system_prompt=system_prompt)
-            data = json.loads(clean_json_text(response))
-            if "characters" in data and "scenes" in data:
+            data = parse_llm_json(response)
+            if data and "characters" in data and "scenes" in data:
                 return data
         except Exception as e:  # noqa: BLE001 - intentional broad catch for LLM fallback
             self.log(f"LLM generation failed: {e}. Falling back to rule-based.")

@@ -38,6 +38,32 @@ class EmotionalTone(Enum):
     NEUTRAL = "neutral"
 
 
+def parse_enum(value, enum_cls, default=None):
+    """Parse a value into an enum member, returning ``default`` on failure."""
+    if isinstance(value, enum_cls):
+        return value
+    if isinstance(value, str) and value in [e.value for e in enum_cls]:
+        return enum_cls(value)
+    if default is not None:
+        return default
+    raise ValueError(f"Invalid {enum_cls.__name__} value: {value!r}")
+
+
+def parse_shot_type(value, default=ShotType.MEDIUM) -> ShotType:
+    """Parse a value into a :class:`ShotType` member."""
+    return parse_enum(value, ShotType, default)
+
+
+def parse_emotional_tone(value, default=EmotionalTone.NEUTRAL) -> EmotionalTone:
+    """Parse a value into an :class:`EmotionalTone` member."""
+    return parse_enum(value, EmotionalTone, default)
+
+
+def parse_transition_type(value, default=TransitionType.CUT) -> TransitionType:
+    """Parse a value into a :class:`TransitionType` member."""
+    return parse_enum(value, TransitionType, default)
+
+
 @dataclass
 class Character:
     name: str
@@ -54,6 +80,16 @@ class Character:
             "voice_description": self.voice_description,
             "consistency_embedding": self.consistency_embedding,
         }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Character":
+        return cls(
+            name=data.get("name", "Unknown"),
+            description=data.get("description", ""),
+            visual_prompt=data.get("visual_prompt", ""),
+            voice_description=data.get("voice_description"),
+            consistency_embedding=data.get("consistency_embedding"),
+        )
 
 
 @dataclass
@@ -87,6 +123,23 @@ class Shot:
             "generated_video_path": self.generated_video_path,
         }
 
+    @classmethod
+    def from_dict(cls, data: dict) -> "Shot":
+        return cls(
+            shot_number=data.get("shot_number", 1),
+            shot_type=parse_shot_type(data.get("shot_type")),
+            description=data.get("description", ""),
+            duration_seconds=float(data.get("duration_seconds", 3.0)),
+            dialogue=data.get("dialogue"),
+            action=data.get("action"),
+            camera_movement=data.get("camera_movement"),
+            visual_prompt=data.get("visual_prompt"),
+            characters=list(data.get("characters", [])),
+            emotional_tone=parse_emotional_tone(data.get("emotional_tone")),
+            generated_image_path=data.get("generated_image_path"),
+            generated_video_path=data.get("generated_video_path"),
+        )
+
 
 @dataclass
 class Scene:
@@ -117,6 +170,20 @@ class Scene:
             "environment_prompt": self.environment_prompt,
         }
 
+    @classmethod
+    def from_dict(cls, data: dict) -> "Scene":
+        return cls(
+            scene_number=data.get("scene_number", 1),
+            title=data.get("title", ""),
+            location=data.get("location", ""),
+            time_of_day=data.get("time_of_day", ""),
+            description=data.get("description", ""),
+            emotional_tone=parse_emotional_tone(data.get("emotional_tone")),
+            shots=[Shot.from_dict(s) for s in data.get("shots", [])],
+            characters=list(data.get("characters", [])),
+            environment_prompt=data.get("environment_prompt"),
+        )
+
 
 @dataclass
 class SoundCue:
@@ -136,6 +203,17 @@ class SoundCue:
             "intensity": self.intensity,
             "generated_audio_path": self.generated_audio_path,
         }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "SoundCue":
+        return cls(
+            timestamp=float(data.get("timestamp", 0.0)),
+            duration=float(data.get("duration", 0.0)),
+            cue_type=data.get("cue_type", "ambient"),
+            description=data.get("description", ""),
+            intensity=float(data.get("intensity", 0.5)),
+            generated_audio_path=data.get("generated_audio_path"),
+        )
 
 
 @dataclass
@@ -159,6 +237,18 @@ class SoundtrackSegment:
             "generated_audio_path": self.generated_audio_path,
         }
 
+    @classmethod
+    def from_dict(cls, data: dict) -> "SoundtrackSegment":
+        return cls(
+            start_time=float(data.get("start_time", 0.0)),
+            end_time=float(data.get("end_time", 0.0)),
+            mood=parse_emotional_tone(data.get("mood")),
+            tempo=data.get("tempo", ""),
+            instruments=list(data.get("instruments", [])),
+            description=data.get("description", ""),
+            generated_audio_path=data.get("generated_audio_path"),
+        )
+
 
 @dataclass
 class EditDecision:
@@ -178,6 +268,17 @@ class EditDecision:
             "speed_adjustment": self.speed_adjustment,
             "color_grade": self.color_grade,
         }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "EditDecision":
+        return cls(
+            shot_index=data.get("shot_index", 0),
+            transition_in=parse_transition_type(data.get("transition_in")),
+            transition_out=parse_transition_type(data.get("transition_out")),
+            transition_duration=float(data.get("transition_duration", 0.5)),
+            speed_adjustment=float(data.get("speed_adjustment", 1.0)),
+            color_grade=data.get("color_grade"),
+        )
 
 
 @dataclass
@@ -205,6 +306,24 @@ class FilmScript:
             "characters": [c.to_dict() for c in self.characters],
             "scenes": [s.to_dict() for s in self.scenes],
             "soundtrack": [s.to_dict() for s in self.soundtrack],
-            "sound_cues": [s.to_dict() for s in self.sound_cues],
+            "sound_cues": [c.to_dict() for c in self.sound_cues],
             "edit_decisions": [e.to_dict() for e in self.edit_decisions],
         }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "FilmScript":
+        return cls(
+            title=data.get("title", "Untitled"),
+            logline=data.get("logline", ""),
+            genre=data.get("genre", "drama"),
+            total_duration_estimate=float(data.get("total_duration_estimate", 60.0)),
+            characters=[Character.from_dict(c) for c in data.get("characters", [])],
+            scenes=[Scene.from_dict(s) for s in data.get("scenes", [])],
+            soundtrack=[
+                SoundtrackSegment.from_dict(s) for s in data.get("soundtrack", [])
+            ],
+            sound_cues=[SoundCue.from_dict(c) for c in data.get("sound_cues", [])],
+            edit_decisions=[
+                EditDecision.from_dict(e) for e in data.get("edit_decisions", [])
+            ],
+        )

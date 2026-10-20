@@ -10,14 +10,11 @@ from director_gpt.agents.sound import SoundDesignerAgent
 from director_gpt.models import (
     Character,
     EditDecision,
-    EmotionalTone,
     FilmScript,
     Scene,
     Shot,
-    ShotType,
     SoundCue,
     SoundtrackSegment,
-    TransitionType,
 )
 from director_gpt.models.project import ProductionPhase, ProjectState
 from director_gpt.utils import safe_import
@@ -96,49 +93,11 @@ class DirectorAgent:
         if self.llm_client:
             screenplay_data = self._refine_script_with_feedback(screenplay_data)
 
-        self.script.characters = [Character(**c) for c in screenplay_data.get("characters", [])]
+        self.script.characters = [
+            Character.from_dict(c) for c in screenplay_data.get("characters", [])
+        ]
         self.script.scenes = [
-            Scene(
-                scene_number=s["scene_number"],
-                title=s["title"],
-                location=s["location"],
-                time_of_day=s["time_of_day"],
-                description=s["description"],
-                emotional_tone=(
-                    EmotionalTone(s["emotional_tone"])
-                    if isinstance(s["emotional_tone"], str)
-                    and s["emotional_tone"] in [e.value for e in EmotionalTone]
-                    else EmotionalTone.NEUTRAL
-                ),
-                characters=s.get("characters", []),
-                environment_prompt=s.get("environment_prompt"),
-                shots=[
-                    Shot(
-                        shot_number=sh["shot_number"],
-                        shot_type=(
-                            ShotType(sh["shot_type"])
-                            if isinstance(sh["shot_type"], str)
-                            and sh["shot_type"] in [st.value for st in ShotType]
-                            else ShotType.MEDIUM
-                        ),
-                        description=sh["description"],
-                        duration_seconds=sh["duration_seconds"],
-                        dialogue=sh.get("dialogue"),
-                        action=sh.get("action"),
-                        camera_movement=sh.get("camera_movement"),
-                        visual_prompt=sh.get("visual_prompt"),
-                        characters=sh.get("characters", []),
-                        emotional_tone=(
-                            EmotionalTone(sh["emotional_tone"])
-                            if isinstance(sh.get("emotional_tone"), str)
-                            and sh["emotional_tone"] in [e.value for e in EmotionalTone]
-                            else EmotionalTone.NEUTRAL
-                        ),
-                    )
-                    for sh in s.get("shots", [])
-                ],
-            )
-            for s in screenplay_data.get("scenes", [])
+            Scene.from_dict(s) for s in screenplay_data.get("scenes", [])
         ]
 
         self.state.add_message(
@@ -244,30 +203,11 @@ class DirectorAgent:
         )
 
         self.script.soundtrack = [
-            SoundtrackSegment(
-                start_time=s["start_time"],
-                end_time=s["end_time"],
-                mood=(
-                    EmotionalTone(s["mood"])
-                    if isinstance(s["mood"], str) and s["mood"] in [e.value for e in EmotionalTone]
-                    else EmotionalTone.NEUTRAL
-                ),
-                tempo=s["tempo"],
-                instruments=s["instruments"],
-                description=s["description"],
-                generated_audio_path=s.get("generated_audio_path"),
-            )
+            SoundtrackSegment.from_dict(s)
             for s in sound_data.get("soundtrack", [])
         ]
         self.script.sound_cues = [
-            SoundCue(
-                timestamp=c["timestamp"],
-                duration=c["duration"],
-                cue_type=c["cue_type"],
-                description=c["description"],
-                intensity=c.get("intensity", 0.5),
-                generated_audio_path=c.get("generated_audio_path"),
-            )
+            SoundCue.from_dict(c)
             for c in sound_data.get("sound_cues", [])
         ]
 
@@ -322,22 +262,7 @@ class DirectorAgent:
         )
 
         self.script.edit_decisions = [
-            EditDecision(
-                shot_index=e["shot_index"],
-                transition_in=(
-                    TransitionType(e["transition_in"])
-                    if isinstance(e["transition_in"], str)
-                    else e["transition_in"]
-                ),
-                transition_out=(
-                    TransitionType(e["transition_out"])
-                    if isinstance(e["transition_out"], str)
-                    else e["transition_out"]
-                ),
-                transition_duration=e.get("transition_duration", 0.5),
-                speed_adjustment=e.get("speed_adjustment", 1.0),
-                color_grade=e.get("color_grade"),
-            )
+            EditDecision.from_dict(e)
             for e in edit_data.get("edit_decisions", [])
         ]
 

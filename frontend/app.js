@@ -10,6 +10,7 @@ const scriptBtn = document.getElementById('scriptBtn');
 const downloadBtn = document.getElementById('downloadBtn');
 const statusSection = document.getElementById('status');
 const statusText = document.getElementById('statusText');
+if (statusText) statusText.setAttribute('aria-live', 'polite');
 const resultsSection = document.getElementById('results');
 
 function initEnchantedReveal() {
@@ -77,6 +78,10 @@ function initEnchantedReveal() {
 
     if (curtain) {
         curtain.addEventListener('click', reveal);
+        document.addEventListener('keydown', (e) => {
+            if ((e.key === 'Enter' || e.key === ' ') && !started) reveal();
+            if (e.key === 'Escape' && !started) reveal();
+        });
     }
 }
 
@@ -108,6 +113,7 @@ function showStatus(message) {
     statusText.textContent = message;
     statusSection.classList.remove('hidden');
     resultsSection.classList.add('hidden');
+    statusSection.setAttribute('role', 'status');
 }
 
 function hideStatus() {
@@ -117,6 +123,24 @@ function hideStatus() {
 function showResults() {
     resultsSection.classList.remove('hidden');
     hideStatus();
+    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+let toastTimer;
+function showToast(message, type = 'error') {
+    let toast = document.getElementById('appToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'appToast';
+        toast.className = 'toast';
+        toast.setAttribute('role', 'status');
+        toast.setAttribute('aria-live', 'polite');
+        document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 4000);
 }
 
 function getRequestData() {
@@ -202,7 +226,8 @@ async function callApi(endpoint, data) {
 generateBtn.addEventListener('click', async () => {
     const data = getRequestData();
     if (!data.prompt.trim()) {
-        alert('Please enter a film prompt');
+        showToast('Please enter a film prompt');
+        document.getElementById('prompt').focus();
         return;
     }
 
@@ -219,6 +244,7 @@ generateBtn.addEventListener('click', async () => {
         }
     } catch (error) {
         showStatus(`Error: ${error.message}`);
+        showToast(error.message);
         statusSection.classList.remove('hidden');
     } finally {
         generateBtn.disabled = false;
@@ -228,7 +254,8 @@ generateBtn.addEventListener('click', async () => {
 scriptBtn.addEventListener('click', async () => {
     const data = getScriptRequestData();
     if (!data.prompt.trim()) {
-        alert('Please enter a film prompt');
+        showToast('Please enter a film prompt');
+        document.getElementById('prompt').focus();
         return;
     }
 
@@ -251,6 +278,7 @@ scriptBtn.addEventListener('click', async () => {
         }
     } catch (error) {
         showStatus(`Error: ${error.message}`);
+        showToast(error.message);
         statusSection.classList.remove('hidden');
     } finally {
         scriptBtn.disabled = false;

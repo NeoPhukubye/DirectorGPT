@@ -2,7 +2,7 @@
 
 import os
 import time
-from typing import Any
+from typing import Any, cast
 
 from director_gpt.utils.config import LLMConfig
 
@@ -37,7 +37,7 @@ class LLMClient:
 
         return self._client
 
-    def _with_retries(self, fn, *args, **kwargs) -> Any:
+    def _with_retries(self, fn: Any, *args: Any, **kwargs: Any) -> Any:
         """Call ``fn`` with exponential backoff retries on transient errors."""
         last_error: Exception | None = None
         for attempt in range(self._max_retries):
@@ -66,9 +66,9 @@ class LLMClient:
                     temperature=self.config.temperature,
                     max_tokens=self.config.max_tokens,
                 )
-                return response.choices[0].message.content or ""
+                return cast(str, response.choices[0].message.content or "")
 
-            return self._with_retries(_call)
+            return cast(str, self._with_retries(_call))
 
         elif self.provider == "gemini":
             full_prompt = prompt
@@ -83,9 +83,9 @@ class LLMClient:
                         "max_output_tokens": self.config.max_tokens,
                     },
                 )
-                return response.text or ""
+                return cast(str, response.text or "")
 
-            return self._with_retries(_call)
+            return cast(str, self._with_retries(_call))
 
         raise ValueError(f"Unsupported provider: {self.provider}")
 
@@ -105,9 +105,9 @@ class LLMClient:
                     temperature=self.config.temperature,
                     max_tokens=self.config.max_tokens,
                 )
-                return response.choices[0].message.content or ""
+                return cast(str, response.choices[0].message.content or "")
 
-            return self._with_retries(_call)
+            return cast(str, self._with_retries(_call))
 
         elif self.provider == "gemini":
             history = []
@@ -127,8 +127,8 @@ class LLMClient:
                         "max_output_tokens": self.config.max_tokens,
                     },
                 )
-                return response.text or ""
+                return cast(str, response.text or "")
 
-            return self._with_retries(_call)
+            return cast(str, self._with_retries(_call))
 
         raise ValueError(f"Unsupported provider: {self.provider}")

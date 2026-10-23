@@ -130,9 +130,7 @@ async def produce(req: ProduceRequest):
             report = director.get_production_report()
             script_path = config.output_dir / "script.json"
             script_data = (
-                json.loads(script_path.read_text())
-                if script_path.exists()
-                else script.to_dict()
+                json.loads(script_path.read_text()) if script_path.exists() else script.to_dict()
             )
 
             return {
@@ -167,9 +165,7 @@ async def generate_script(req: ScriptRequest):
                 output_dir=Path(tmpdir),
             )
             state = ProjectState(config=config)
-            screenwriter = ScreenwriterAgent(
-                "Screenwriter", state, llm_client=llm_client
-            )
+            screenwriter = ScreenwriterAgent("Screenwriter", state, llm_client=llm_client)
 
             result = screenwriter.process(
                 {

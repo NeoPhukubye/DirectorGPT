@@ -80,6 +80,7 @@ class DirectorAgent:
 
     def _phase_development(self, prompt: str, target_duration: float):
         """Development phase: Create the script and storyboard with critique-refine loop."""
+        assert self.script is not None, "Script must be initialized before development phase"
         self.state.add_message("Director", "=== DEVELOPMENT PHASE ===")
 
         screenplay_data = self.screenwriter.process(
@@ -96,9 +97,7 @@ class DirectorAgent:
         self.script.characters = [
             Character.from_dict(c) for c in screenplay_data.get("characters", [])
         ]
-        self.script.scenes = [
-            Scene.from_dict(s) for s in screenplay_data.get("scenes", [])
-        ]
+        self.script.scenes = [Scene.from_dict(s) for s in screenplay_data.get("scenes", [])]
 
         self.state.add_message(
             "Director",
@@ -203,13 +202,9 @@ class DirectorAgent:
         )
 
         self.script.soundtrack = [
-            SoundtrackSegment.from_dict(s)
-            for s in sound_data.get("soundtrack", [])
+            SoundtrackSegment.from_dict(s) for s in sound_data.get("soundtrack", [])
         ]
-        self.script.sound_cues = [
-            SoundCue.from_dict(c)
-            for c in sound_data.get("sound_cues", [])
-        ]
+        self.script.sound_cues = [SoundCue.from_dict(c) for c in sound_data.get("sound_cues", [])]
 
         if self.state.config.enable_audio_generation:
             self.state.add_message("Director", "Generating audio assets...")
@@ -262,8 +257,7 @@ class DirectorAgent:
         )
 
         self.script.edit_decisions = [
-            EditDecision.from_dict(e)
-            for e in edit_data.get("edit_decisions", [])
+            EditDecision.from_dict(e) for e in edit_data.get("edit_decisions", [])
         ]
 
         output_path = self.state.config.output_dir / "final_cut.mp4"

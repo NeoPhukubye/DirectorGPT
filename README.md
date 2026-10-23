@@ -125,32 +125,6 @@ Create a `config.json` for API keys and generation settings:
 }
 ```
 
-## Configuration
-
-Create a `config.json` for API keys and generation settings:
-
-```json
-{
-  "llm": {
-    "provider": "openai",
-    "model": "gpt-4",
-    "api_key": "sk-..."
-  },
-  "image_gen": {
-    "provider": "dall-e-3",
-    "size": "1920x1080"
-  },
-  "audio": {
-    "provider": "elevenlabs",
-    "api_key": "..."
-  },
-  "video": {
-    "provider": "runway",
-    "api_key": "..."
-  }
-}
-```
-
 ## Development
 
 ```bash

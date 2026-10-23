@@ -169,7 +169,7 @@ class SoundDesignerAgent(BaseAgent):
 
     def _generate_soundtrack(self, scenes: list[dict]) -> list[dict]:
         """Generate soundtrack segments matching scene emotions."""
-        soundtrack = []
+        soundtrack: list[SoundtrackSegment] = []
         current_time = 0.0
 
         for scene in scenes:
@@ -185,7 +185,7 @@ class SoundDesignerAgent(BaseAgent):
 
             current_time += scene_duration
 
-        return [s.to_dict() if hasattr(s, "to_dict") else s for s in soundtrack]
+        return [s.to_dict() for s in soundtrack]
 
     def _create_segments_for_scene(
         self, start_time: float, duration: float, emotional_tone: str, scene: dict
@@ -290,7 +290,7 @@ class SoundDesignerAgent(BaseAgent):
 
     def _generate_sound_cues(self, scenes: list[dict]) -> list[dict]:
         """Generate specific sound effect cues."""
-        cues = []
+        cues: list[SoundCue] = []
         current_time = 0.0
 
         for scene in scenes:
@@ -302,7 +302,7 @@ class SoundDesignerAgent(BaseAgent):
             )
             current_time += scene_duration
 
-        return [c.to_dict() if hasattr(c, "to_dict") else c for c in cues]
+        return [c.to_dict() for c in cues]
 
     def _analyze_scene_for_cues(self, scene: dict, time_offset: float) -> list[SoundCue]:
         """Analyze a scene for required sound effects."""

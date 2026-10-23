@@ -42,8 +42,8 @@ class CastingAgent(BaseAgent):
 
     def _critique_script(self, scenes: list[dict], characters: list[dict]) -> dict:
         """Critique the script for continuity issues."""
-        critique_notes = []
-        character_appearances = {}
+        critique_notes: list[dict] = []
+        character_appearances: dict[str, list[int]] = {}
 
         for scene in scenes:
             for char in scene.get("characters", []):
@@ -147,8 +147,8 @@ class CastingAgent(BaseAgent):
 
     def _generate_environment_prompts(self, scenes: list[dict]) -> dict[str, str]:
         """Generate consistent environment prompts for recurring locations."""
-        location_prompts = {}
-        seen_locations = {}
+        location_prompts: dict[str, str] = {}
+        seen_locations: dict[str, str] = {}
 
         for scene in scenes:
             location = scene.get("location", "")
@@ -187,9 +187,9 @@ class CastingAgent(BaseAgent):
 
     def _generate_consistency_notes(self, scenes: list[dict], characters: list[dict]) -> list[dict]:
         """Generate notes about continuity concerns."""
-        notes = []
+        notes: list[dict] = []
 
-        character_appearances = {}
+        character_appearances: dict[str, list[int]] = {}
         for scene in scenes:
             for char in scene.get("characters", []):
                 if char not in character_appearances:

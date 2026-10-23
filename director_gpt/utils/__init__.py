@@ -1,9 +1,11 @@
 """Utility functions and configuration helpers."""
 
+import json
 import os
 import re
 import shutil
 from pathlib import Path
+from typing import Any, cast
 
 
 def get_output_dir(name: str) -> Path:
@@ -37,7 +39,7 @@ def format_duration(seconds: float) -> str:
     return f"{mins}:{secs:02d}:{frames:02d}"
 
 
-def safe_import(module_name: str, package_name: str | None = None):
+def safe_import(module_name: str, package_name: str | None = None) -> tuple[Any | None, str | None]:
     """Safely import an optional dependency, returning (module, error_message)."""
     package_name = package_name or module_name
     try:
@@ -78,14 +80,12 @@ def parse_llm_json(text: str) -> dict | None:
 
     Falls back to brace-matching extraction if direct parsing fails.
     """
-    import json
-
     candidates = [clean_json_text(text), extract_json_from_text(text)]
     for candidate in candidates:
         if not candidate:
             continue
         try:
-            return json.loads(candidate)
+            return cast(dict, json.loads(candidate))
         except json.JSONDecodeError:
             continue
     return None

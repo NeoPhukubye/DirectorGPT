@@ -155,7 +155,7 @@ class ScreenwriterAgent(BaseAgent):
         num_shots = max(3, min(6, int(scene_duration / 5)))
         shot_duration = scene_duration / num_shots
 
-        shots = []
+        shots: list[dict] = []
         shot_types_sequence = self._get_shot_sequence(beat["emotional_tone"])
 
         for j in range(num_shots):

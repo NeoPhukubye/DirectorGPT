@@ -98,7 +98,7 @@ def _parse_resolution(resolution: str) -> tuple[int, int]:
         ) from exc
 
 
-def cmd_produce(args):
+def cmd_produce(args: argparse.Namespace) -> int:
     """Execute film production pipeline."""
     width, height = _parse_resolution(args.resolution)
 
@@ -124,12 +124,18 @@ def cmd_produce(args):
     print(f"  Output: {config.output_dir}")
     print(f"\n{'='*60}\n")
 
-    director.produce_film(
-        prompt=args.prompt,
-        title=args.title,
-        genre=args.genre,
-        target_duration=args.duration,
-    )
+    try:
+        director.produce_film(
+            prompt=args.prompt,
+            title=args.title,
+            genre=args.genre,
+            target_duration=args.duration,
+        )
+    except Exception as exc:  # noqa: BLE001 - top-level CLI guard
+        print(f"\nError during production: {exc}", file=sys.stderr)
+        state.add_error(str(exc))
+        state.save_state()
+        return 1
 
     report = director.get_production_report()
 
@@ -141,6 +147,8 @@ def cmd_produce(args):
     print(f"  Characters: {report['characters']}")
     print(f"  Estimated Duration: {report['estimated_duration']:.1f}s")
     print(f"  Sound Cues: {report['sound_cues']}")
+    if report["errors"]:
+        print(f"  Warnings: {len(report['errors'])}")
     print("\n  Output Files:")
     for name, path in state.artifacts.items():
         print(f"    - {name}: {path}")
@@ -151,7 +159,7 @@ def cmd_produce(args):
     return 0
 
 
-def cmd_script(args):
+def cmd_script(args: argparse.Namespace) -> int:
     """Generate script only."""
     from director_gpt.agents.screenwriter import ScreenwriterAgent
 
@@ -180,7 +188,7 @@ def cmd_script(args):
     return 0
 
 
-def cmd_report(args):
+def cmd_report(args: argparse.Namespace) -> int:
     """Show production report."""
     config = ProjectConfig(
         project_name="report",
@@ -206,7 +214,7 @@ def cmd_report(args):
     return 0
 
 
-def main():
+def main() -> int:
     parser = create_parser()
     args = parser.parse_args()
 

@@ -155,9 +155,7 @@ def test_shot_from_dict_defaults():
 
 
 def test_shot_from_dict_invalid_enum_defaults():
-    shot = Shot.from_dict(
-        {"shot_type": "not_a_real_type", "emotional_tone": "bogus"}
-    )
+    shot = Shot.from_dict({"shot_type": "not_a_real_type", "emotional_tone": "bogus"})
     assert shot.shot_type == ShotType.MEDIUM
     assert shot.emotional_tone == EmotionalTone.NEUTRAL
 
@@ -203,9 +201,7 @@ def test_film_script_from_dict():
         "logline": "From dict",
         "genre": "comedy",
         "total_duration_estimate": 30.0,
-        "characters": [
-            {"name": "Sam", "description": "Protagonist", "visual_prompt": "heroic"}
-        ],
+        "characters": [{"name": "Sam", "description": "Protagonist", "visual_prompt": "heroic"}],
         "scenes": [
             {
                 "scene_number": 1,

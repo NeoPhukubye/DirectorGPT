@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from director_gpt.agents import BaseAgent
-from director_gpt.models import EditDecision, TransitionType
+from director_gpt.models import EditDecision, FilmScript, TransitionType
 from director_gpt.models.project import ProjectState
 
 
@@ -137,17 +137,17 @@ class EditorAgent(BaseAgent):
 
         return commands
 
-    def assemble_film(self, script, output_path: str) -> bool:
+    def assemble_film(self, script: FilmScript, output_path: str) -> str:
         """Assemble the final film using FFmpeg."""
         self.log("Starting film assembly")
 
-        output_path = Path(output_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path = Path(output_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
 
-        renderer = VideoRenderer(str(output_path.parent / "rendered"))
+        renderer = VideoRenderer(str(out_path.parent / "rendered"))
         result_path = renderer.stitch_production(script.to_dict(), script.title)
         self.log(f"Final cut saved: {result_path}")
-        return True
+        return result_path
 
     def generate_ffmpeg_script(self, script, output_dir: Path) -> Path:
         """Generate a standalone FFmpeg script for manual execution."""
@@ -243,7 +243,9 @@ class VideoRenderer:
             video_path = shot.get("generated_video_path")
             image_path = shot.get("generated_image_path")
 
-            decision = next((d for d in edit_decisions if d.get("shot_index") == idx), {})
+            decision: dict[str, Any] = next(
+                (d for d in edit_decisions if d.get("shot_index") == idx), {}
+            )
             trans_in = decision.get("transition_in")
             trans_out = decision.get("transition_out")
             trans_dur = decision.get("transition_duration", 0.5)

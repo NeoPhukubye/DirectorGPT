@@ -2,6 +2,9 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any, TypeVar, cast
+
+T = TypeVar("T", bound=Enum)
 
 
 class ShotType(Enum):
@@ -38,7 +41,7 @@ class EmotionalTone(Enum):
     NEUTRAL = "neutral"
 
 
-def parse_enum(value, enum_cls, default=None):
+def parse_enum(value: Any, enum_cls: type[T], default: T | None = None) -> T:
     """Parse a value into an enum member, returning ``default`` on failure."""
     if isinstance(value, enum_cls):
         return value
@@ -49,19 +52,23 @@ def parse_enum(value, enum_cls, default=None):
     raise ValueError(f"Invalid {enum_cls.__name__} value: {value!r}")
 
 
-def parse_shot_type(value, default=ShotType.MEDIUM) -> ShotType:
+def parse_shot_type(value: Any, default: ShotType = ShotType.MEDIUM) -> ShotType:
     """Parse a value into a :class:`ShotType` member."""
-    return parse_enum(value, ShotType, default)
+    return cast(ShotType, parse_enum(value, ShotType, default))
 
 
-def parse_emotional_tone(value, default=EmotionalTone.NEUTRAL) -> EmotionalTone:
-    """Parse a value into an :class:`EmotionalTone` member."""
-    return parse_enum(value, EmotionalTone, default)
+def parse_emotional_tone(
+    value: Any, default: EmotionalTone = EmotionalTone.NEUTRAL
+) -> EmotionalTone:
+    """Parse a value into a :class:`EmotionalTone` member."""
+    return cast(EmotionalTone, parse_enum(value, EmotionalTone, default))
 
 
-def parse_transition_type(value, default=TransitionType.CUT) -> TransitionType:
+def parse_transition_type(
+    value: Any, default: TransitionType = TransitionType.CUT
+) -> TransitionType:
     """Parse a value into a :class:`TransitionType` member."""
-    return parse_enum(value, TransitionType, default)
+    return cast(TransitionType, parse_enum(value, TransitionType, default))
 
 
 @dataclass
@@ -319,11 +326,7 @@ class FilmScript:
             total_duration_estimate=float(data.get("total_duration_estimate", 60.0)),
             characters=[Character.from_dict(c) for c in data.get("characters", [])],
             scenes=[Scene.from_dict(s) for s in data.get("scenes", [])],
-            soundtrack=[
-                SoundtrackSegment.from_dict(s) for s in data.get("soundtrack", [])
-            ],
+            soundtrack=[SoundtrackSegment.from_dict(s) for s in data.get("soundtrack", [])],
             sound_cues=[SoundCue.from_dict(c) for c in data.get("sound_cues", [])],
-            edit_decisions=[
-                EditDecision.from_dict(e) for e in data.get("edit_decisions", [])
-            ],
+            edit_decisions=[EditDecision.from_dict(e) for e in data.get("edit_decisions", [])],
         )

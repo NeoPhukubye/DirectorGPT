@@ -1,6 +1,7 @@
 """FastAPI backend for DirectorGPT web deployment."""
 
 import json
+import logging
 import os
 import tempfile
 from pathlib import Path
@@ -13,6 +14,10 @@ from director_gpt.director import DirectorAgent
 from director_gpt.llm import LLMClient
 from director_gpt.models.project import ProjectConfig, ProjectState
 from director_gpt.utils.config import LLMConfig
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="DirectorGPT API",
@@ -95,6 +100,7 @@ async def health():
 
 @app.post("/api/produce")
 async def produce(req: ProduceRequest):
+    logger.info(f"Starting production: title={req.title}, genre={req.genre}, duration={req.duration}")
     try:
         width, height = _parse_resolution(req.resolution)
         api_key = req.llm_api_key or os.getenv("GEMINI_API_KEY")
@@ -133,6 +139,7 @@ async def produce(req: ProduceRequest):
                 json.loads(script_path.read_text()) if script_path.exists() else script.to_dict()
             )
 
+            logger.info(f"Production complete: {req.title}")
             return {
                 "success": True,
                 "script": script_data,
@@ -142,6 +149,7 @@ async def produce(req: ProduceRequest):
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Production failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 

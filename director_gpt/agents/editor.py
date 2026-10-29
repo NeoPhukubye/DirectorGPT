@@ -1,6 +1,7 @@
 """Editor agent for video assembly and post-production."""
 
 import os
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -141,6 +142,11 @@ class EditorAgent(BaseAgent):
         """Assemble the final film using FFmpeg."""
         self.log("Starting film assembly")
 
+        if not shutil.which("ffmpeg"):
+            raise RuntimeError(
+                "FFmpeg is not installed. Install it with: sudo apt-get install ffmpeg"
+            )
+
         out_path = Path(output_path)
         out_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -225,6 +231,11 @@ class VideoRenderer:
         Takes project JSON (with shots, soundtrack, and edit_decisions)
         and renders a final stitched MP4 using FFmpeg.
         """
+        if not shutil.which("ffmpeg"):
+            raise RuntimeError(
+                "FFmpeg is not installed. Install it with: sudo apt-get install ffmpeg"
+            )
+
         scenes = project_data.get("scenes", [])
         edit_decisions = project_data.get("edit_decisions", [])
         soundtrack = project_data.get("soundtrack", [])
@@ -316,7 +327,14 @@ class VideoRenderer:
                     str(shot_out_path),
                 ]
 
-            subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+            try:
+                subprocess.run(
+                    cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE
+                )
+            except subprocess.CalledProcessError as e:
+                raise RuntimeError(
+                    f"FFmpeg failed for shot {idx}: {e.stderr.decode() if e.stderr else str(e)}"
+                ) from e
             clip_files.append(shot_out_path)
 
         concat_list_path = self.output_dir / "concat_list.txt"
@@ -337,7 +355,14 @@ class VideoRenderer:
             "copy",
             str(raw_stitched_video),
         ]
-        subprocess.run(concat_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        try:
+            subprocess.run(
+                concat_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE
+            )
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(
+                f"FFmpeg concat failed: {e.stderr.decode() if e.stderr else str(e)}"
+            ) from e
 
         final_mp4 = self.output_dir / f"{project_name}_final_cut.mp4"
 
@@ -380,7 +405,14 @@ class VideoRenderer:
                     str(final_mp4),
                 ]
             )
-            subprocess.run(mix_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+            try:
+                subprocess.run(
+                    mix_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE
+                )
+            except subprocess.CalledProcessError as e:
+                raise RuntimeError(
+                    f"FFmpeg audio mix failed: {e.stderr.decode() if e.stderr else str(e)}"
+                ) from e
         else:
             raw_stitched_video.rename(final_mp4)
 

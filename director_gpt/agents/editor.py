@@ -328,9 +328,7 @@ class VideoRenderer:
                 ]
 
             try:
-                subprocess.run(
-                    cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE
-                )
+                subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
             except subprocess.CalledProcessError as e:
                 raise RuntimeError(
                     f"FFmpeg failed for shot {idx}: {e.stderr.decode() if e.stderr else str(e)}"

@@ -53,48 +53,48 @@ def safe_import(module_name: str, package_name: str | None = None) -> tuple[Any 
 
 
 def clean_json_text(raw: str) -> str:
-        """Strip markdown code fences from LLM output before JSON parsing."""
-        if not raw or not isinstance(raw, str):
-            return ""
-        cleaned = raw.strip()
-        if cleaned.startswith("```json"):
-            cleaned = cleaned[len("```json") :]
-        elif cleaned.startswith("```"):
-            cleaned = cleaned[len("```") :]
-        cleaned = cleaned.removesuffix("```")
-        return cleaned.strip()
+    """Strip markdown code fences from LLM output before JSON parsing."""
+    if not raw or not isinstance(raw, str):
+        return ""
+    cleaned = raw.strip()
+    if cleaned.startswith("```json"):
+        cleaned = cleaned[len("```json") :]
+    elif cleaned.startswith("```"):
+        cleaned = cleaned[len("```") :]
+    cleaned = cleaned.removesuffix("```")
+    return cleaned.strip()
 
 
 def extract_json_from_text(text: str) -> str | None:
-        """Extract the first JSON object found in a text string.
+    """Extract the first JSON object found in a text string.
 
-        Returns the JSON substring or None if no valid JSON braces are found.
-        """
-        if not text or not isinstance(text, str):
-            return None
-        start = text.find("{")
-        end = text.rfind("}")
-        if start == -1 or end == -1 or end < start:
-            return None
-        return text[start : end + 1]
+    Returns the JSON substring or None if no valid JSON braces are found.
+    """
+    if not text or not isinstance(text, str):
+        return None
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end == -1 or end < start:
+        return None
+    return text[start : end + 1]
 
 
 def parse_llm_json(text: str) -> dict | None:
-        """Parse JSON from LLM output, handling code fences and embedded text.
+    """Parse JSON from LLM output, handling code fences and embedded text.
 
-        Falls back to brace-matching extraction if direct parsing fails.
-        """
-        if not text or not isinstance(text, str):
-            return None
-        candidates = [clean_json_text(text), extract_json_from_text(text)]
-        for candidate in candidates:
-            if not candidate:
-                continue
-            try:
-                return cast(dict, json.loads(candidate))
-            except json.JSONDecodeError:
-                continue
+    Falls back to brace-matching extraction if direct parsing fails.
+    """
+    if not text or not isinstance(text, str):
         return None
+    candidates = [clean_json_text(text), extract_json_from_text(text)]
+    for candidate in candidates:
+        if not candidate:
+            continue
+        try:
+            return cast(dict, json.loads(candidate))
+        except json.JSONDecodeError:
+            continue
+    return None
 
 
 def clamp(value: float, low: float, high: float) -> float:

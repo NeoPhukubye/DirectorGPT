@@ -100,7 +100,9 @@ async def health():
 
 @app.post("/api/produce")
 async def produce(req: ProduceRequest):
-    logger.info(f"Starting production: title={req.title}, genre={req.genre}, duration={req.duration}")
+    logger.info(
+        f"Starting production: title={req.title}, genre={req.genre}, duration={req.duration}"
+    )
     try:
         width, height = _parse_resolution(req.resolution)
         api_key = req.llm_api_key or os.getenv("GEMINI_API_KEY")

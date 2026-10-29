@@ -70,7 +70,7 @@ class SoundDesignerAgent(BaseAgent):
                 )
                 if audio_path:
                     segment["generated_audio_path"] = str(audio_path)
-                    generated_soundtrack.append(audio_path)
+                    generated_soundtrack.append(str(audio_path))
             except Exception as e:  # noqa: BLE001 - intentional broad catch for audio generation
                 self.log(f"Soundtrack segment {i} generation failed: {e}")
 
@@ -80,7 +80,7 @@ class SoundDesignerAgent(BaseAgent):
                 audio_path = self._generate_audio_segment(client, cue, audio_dir, i, "cue")
                 if audio_path:
                     cue["generated_audio_path"] = str(audio_path)
-                    generated_cues.append(audio_path)
+                    generated_cues.append(str(audio_path))
             except Exception as e:  # noqa: BLE001 - intentional broad catch for audio generation
                 self.log(f"Sound cue {i} generation failed: {e}")
 
@@ -112,19 +112,26 @@ class SoundDesignerAgent(BaseAgent):
         if output_path.exists():
             return output_path
 
-        audio = client.text_to_speech.convert(
-            text=text,
-            voice_id=voice_id,
-            model_id="eleven_v3",
-            output_format="mp3_44100_128",
-        )
+        try:
+            audio = client.text_to_speech.convert(
+                text=text,
+                voice_id=voice_id,
+                model_id="eleven_v3",
+                output_format="mp3_44100_128",
+            )
 
-        with open(output_path, "wb") as f:
-            for chunk in audio:
-                if isinstance(chunk, bytes):
-                    f.write(chunk)
+            with open(output_path, "wb") as f:
+                for chunk in audio:
+                    if isinstance(chunk, bytes):
+                        f.write(chunk)
+                    elif hasattr(chunk, "data") and isinstance(chunk.data, bytes):
+                        f.write(chunk.data)
 
-        return output_path
+            return output_path
+
+        except Exception as e:  # noqa: BLE001 - intentional broad catch for audio generation
+            self.log(f"Audio segment {index} generation failed: {e}")
+            return None
 
     def _critique_script(self, scenes: list[dict]) -> dict:
         """Critique the script for emotional pacing issues."""

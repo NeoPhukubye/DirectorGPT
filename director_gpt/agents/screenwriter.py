@@ -158,6 +158,15 @@ class ScreenwriterAgent(BaseAgent):
         shots: list[dict] = []
         shot_types_sequence = self._get_shot_sequence(beat["emotional_tone"])
 
+        # Determine default characters for shots
+        beat_characters = beat.get("characters")
+        if beat_characters:
+            default_characters = beat_characters
+        elif characters:
+            default_characters = [characters[0]["name"]]
+        else:
+            default_characters = []
+
         for j in range(num_shots):
             shot_type = shot_types_sequence[j % len(shot_types_sequence)]
             shot_num = j + 1
@@ -169,7 +178,7 @@ class ScreenwriterAgent(BaseAgent):
                 "duration_seconds": round(shot_duration, 1),
                 "camera_movement": self._get_camera_movement(shot_type, j),
                 "visual_prompt": self._generate_visual_prompt(shot_type, beat, characters),
-                "characters": beat.get("characters", [characters[0]["name"]]) if j < 2 else [],
+                "characters": default_characters if j < 2 else [],
                 "emotional_tone": beat["emotional_tone"],
             }
 

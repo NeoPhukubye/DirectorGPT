@@ -208,13 +208,19 @@ class DirectorAgent:
 
         if self.state.config.enable_audio_generation:
             self.state.add_message("Director", "Generating audio assets...")
-            audio_result = self.sound.generate_audio_assets(self.script.to_dict())
-            if audio_result.get("generated"):
-                self.state.add_message(
-                    "Director",
-                    f"Audio generation complete: {len(audio_result.get('soundtrack', []))} tracks, "
-                    f"{len(audio_result.get('sound_cues', []))} cues",
-                )
+            try:
+                audio_result = self.sound.generate_audio_assets(self.script.to_dict())
+                if audio_result.get("generated"):
+                    self.state.add_message(
+                        "Director",
+                        f"Audio generation complete: {len(audio_result.get('soundtrack', []))} tracks, "
+                        f"{len(audio_result.get('sound_cues', []))} cues",
+                    )
+                else:
+                    self.log(f"Audio generation skipped: {audio_result.get('error', 'unknown')}")
+            except Exception as e:  # noqa: BLE001 - intentional broad catch for audio generation
+                self.state.add_error(f"Audio generation failed: {e}")
+                self.log(f"  Audio generation failed: {e}")
 
         self.state.add_message("Director", "Pre-production complete")
 
@@ -229,14 +235,22 @@ class DirectorAgent:
         for scene in self.script.scenes:
             for shot in scene.shots:
                 if self.state.config.enable_image_generation:
-                    image_path = self._generate_shot_image(scene, shot)
-                    if image_path:
-                        shot.generated_image_path = str(image_path)
+                    try:
+                        image_path = self._generate_shot_image(scene, shot)
+                        if image_path:
+                            shot.generated_image_path = str(image_path)
+                    except Exception as e:  # noqa: BLE001 - intentional broad catch for generation
+                        self.state.add_error(f"Image generation failed: {e}")
+                        self.log(f"  Image generation failed: {e}")
 
                 if self.state.config.enable_video_generation:
-                    video_path = self._generate_shot_video(shot)
-                    if video_path:
-                        shot.generated_video_path = str(video_path)
+                    try:
+                        video_path = self._generate_shot_video(shot)
+                        if video_path:
+                            shot.generated_video_path = str(video_path)
+                    except Exception as e:  # noqa: BLE001 - intentional broad catch for generation
+                        self.state.add_error(f"Video generation failed: {e}")
+                        self.log(f"  Video generation failed: {e}")
 
         self.state.add_message("Director", "Production phase complete")
 
@@ -260,11 +274,15 @@ class DirectorAgent:
             EditDecision.from_dict(e) for e in edit_data.get("edit_decisions", [])
         ]
 
-        output_path = self.state.config.output_dir / "final_cut.mp4"
-        actual_output = self.editor.assemble_film(self.script, str(output_path))
+        try:
+            output_path = self.state.config.output_dir / "final_cut.mp4"
+            actual_output = self.editor.assemble_film(self.script, str(output_path))
 
-        self.state.add_artifact("final_cut", Path(actual_output))
-        self.state.add_message("Director", f"Film assembled: {actual_output}")
+            self.state.add_artifact("final_cut", Path(actual_output))
+            self.state.add_message("Director", f"Film assembled: {actual_output}")
+        except RuntimeError as e:
+            self.state.add_error(f"Film assembly failed: {e}")
+            self.log(f"  Film assembly failed: {e}")
 
     def _merge_visual_prompts(self, shot_prompt: str | None, character_prompt: str) -> str:
         """Merge shot description with character consistency prompt."""
